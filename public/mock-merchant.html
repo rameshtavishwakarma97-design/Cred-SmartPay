@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Simulated Phone Screen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .lock-screen {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      max-width: 400px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 56px;
+    }
+
+    /* Wallpaper background — changes with category */
+    .wallpaper {
+      position: absolute;
+      inset: 0;
+      background: var(--wp-bg, linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%));
+      z-index: 0;
+      transition: background 0.5s ease;
+    }
+
+    /* Subtle blurred ambient circles */
+    .glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .glow-1 { width: 260px; height: 260px; top: -60px; left: -60px; background: var(--glow-a, #7c3aed); }
+    .glow-2 { width: 220px; height: 220px; bottom: 80px; right: -40px; background: var(--glow-b, #0ea5e9); }
+
+    .lock-content { position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+    /* Notch */
+    .notch {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 126px; height: 34px;
+      background: #000;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
+      z-index: 10;
+    }
+
+    /* Status bar */
+    .status-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 20px 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.85);
+    }
+    .status-right { display: flex; gap: 6px; align-items: center; }
+
+    /* Clock & date */
+    .time {
+      font-size: 80px;
+      font-weight: 200;
+      letter-spacing: -2px;
+      color: white;
+      text-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      margin: 28px 0 6px;
+      line-height: 1;
+    }
+    .date {
+      font-size: 17px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 36px;
+      letter-spacing: 0.2px;
+    }
+
+    /* Notifications container */
+    .notifications-container {
+      width: 100%;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* --- Group label --- */
+    .notif-group-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 0 4px 4px;
+    }
+
+    /* Base notification */
+    .notification {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: flex;
+      gap: 12px;
+      cursor: pointer;
+      transform: translateY(-16px);
+      opacity: 0;
+      animation: slideDown 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1px 0 rgba(255,255,255,0.15) inset;
+      transition: transform 0.18s, box-shadow 0.18s;
+      position: relative;
+      overflow: hidden;
+    }
+    .notification:active { transform: scale(0.97); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+
+    /* Glimmer strip on interactive notification */
+    .notification.primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-strip, #7c3aed), transparent);
+      opacity: 0.7;
+    }
+
+    /* Staggered animations */
+    .notification:nth-child(1) { animation-delay: 0.1s; }
+    .notification:nth-child(2) { animation-delay: 0.35s; }
+    .notification:nth-child(3) { animation-delay: 0.55s; }
+
+    @keyframes slideDown {
+      from { transform: translateY(-16px); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+
+    /* Icon */
+    .notif-icon-wrap {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+    }
+
+    /* Text */
+    .notif-content { flex: 1; min-width: 0; }
+    .notif-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+    .notif-app-name {
+      color: #333;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .notif-time { color: #888; font-size: 12px; }
+    .notif-title { color: #111; font-weight: 700; font-size: 14.5px; margin-bottom: 2px; }
+    .notif-desc { color: #555; font-size: 13.5px; line-height: 1.35; }
+
+    /* Tag chip */
+    .notif-tag {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--tag-bg, rgba(124,58,237,0.12));
+      color: var(--tag-color, #7c3aed);
+      letter-spacing: 0.3px;
+    }
+
+    /* Tap hint */
+    .tap-hint {
+      margin-top: 24px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.3px;
+      display: flex; align-items: center; gap: 6px;
+      animation: pulse 2s ease-in-out infinite 1.5s;
+    }
+    @keyframes pulse { 0%,100% { opacity: 0.45; } 50% { opacity: 0.85; } }
+
+    /* CRED badge on home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 14px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 4px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lock-screen">
+    <div class="wallpaper" id="wallpaper"></div>
+    <div class="glow glow-1" id="glow1"></div>
+    <div class="glow glow-2" id="glow2"></div>
+
+    <div class="notch"></div>
+
+    <div class="lock-content">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span id="status-time">9:41</span>
+        <div class="status-right">
+          <span>●●●●</span>
+          <span>WiFi</span>
+          <span>🔋</span>
+        </div>
+      </div>
+
+      <!-- Clock -->
+      <div class="time" id="clock">09:41</div>
+      <div class="date" id="date-display">Saturday, March 14</div>
+
+      <!-- Notifications -->
+      <div class="notifications-container" id="notif-container">
+        <!-- Injected by JS -->
+      </div>
+
+      <div class="tap-hint" id="tap-hint">
+        <span>👆</span> Tap notification to open CRED Smart Pay
+      </div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+
+  <script>
+    // =====================================================
+    // SCENARIO DATABASE — one is selected randomly on load
+    // =====================================================
+    const SCENARIOS = [
+      // ─── DINING ───────────────────────────────────────
+      {
+        id: 'zomato',
+        merchantId: 'zomato',
+        category: 'dining',
+        appName: 'Zomato',
+        emoji: '🍕',
+        bgColor: '#E23744',
+        amounts: [349, 520, 680, 850, 1090, 1250],
+        items: [
+          'Truffle Pizza & Garlic Bread',
+          'Chicken Biryani + Raita',
+          '2× Butter Paneer + Naan',
+          'Veg Platter for 3',
+          'Sushi Roll + Miso Soup',
+          'Burger Combo + Fries'
+        ],
+        wallpaper: 'linear-gradient(160deg, #1a0a0a 0%, #3d0e0e 60%, #1a0a0a 100%)',
+        glow: ['#ff4444', '#ff8800'],
+        tagLabel: '🍽️ Dining', tagBg: 'rgba(226,55,68,0.12)', tagColor: '#E23744',
+        accentStrip: '#E23744'
+      },
+      {
+        id: 'swiggy',
+        merchantId: 'swiggy',
+        category: 'dining',
+        appName: 'Swiggy',
+        emoji: '🍔',
+        bgColor: '#FC8019',
+        amounts: [199, 399, 575, 820, 1100],
+        items: [
+          'Double Smash Burger + Coke',
+          'Pasta Arrabbiata + Tiramisu',
+          'Dal Makhani + 2 Rotis',
+          'Pad Thai + Spring Rolls',
+          'Chicken Wings + Dip'
+        ],
+        wallpaper: 'linear-gradient(160deg, #1a0e00 0%, #3d2200 60%, #1a0e00 100%)',
+        glow: ['#FC8019', '#ffcc00'],
+        tagLabel: '🍔 Dining', tagBg: 'rgba(252,128,25,0.12)', tagColor: '#FC8019',
+        accentStrip: '#FC8019'
+      },
+      {
+        id: 'dineout-hdfc',
+        merchantId: 'zomato',
+        category: 'dining',
+        appName: 'Swiggy Dineout',
+        emoji: '🥂',
+        bgColor: '#6c3483',
+        amounts: [1500, 2200, 2750, 3400],
+        items: [
+          'Table for 2 at The Spice Route',
+          'Dinner for 4 at Smoke House Deli',
+          'Fine dining — Taj Mahal Hotel',
+          'Sunday Brunch at JW Marriott'
+        ],
+        wallpaper: 'linear-gradient(160deg, #0d0014 0%, #1a0033 60%, #0d0014 100%)',
+        glow: ['#9b59b6', '#ff6b9d'],
+        tagLabel: '🥂 Dine Out', tagBg: 'rgba(108,52,131,0.14)', tagColor: '#a855f7',
+        accentStrip: '#a855f7'
+      },
+
+      // ─── GROCERY ──────────────────────────────────────
+      {
+        id: 'bigbasket',
+        merchantId: 'bigbasket',
+        category: 'grocery',
+        appName: 'BigBasket',
+        emoji: '🥬',
+        bgColor: '#84C225',
+        amounts: [680, 990, 1250, 1780, 2100],
+        items: [
+          'Monthly grocery basket',
+          'Fresh veggies + dairy bundle',
+          'Pantry restock + snacks',
+          'Organic produce + staples',
+          'Weekend grocery + beverages'
+        ],
+        wallpaper: 'linear-gradient(160deg, #071a00 0%, #0f3d00 60%, #071a00 100%)',
+        glow: ['#84C225', '#00c853'],
+        tagLabel: '🛒 Grocery', tagBg: 'rgba(132,194,37,0.12)', tagColor: '#4caf50',
+        accentStrip: '#84C225'
+      },
+      {
+        id: 'blinkit',
+        merchantId: 'blinkit',
+        category: 'grocery',
+        appName: 'Blinkit',
+        emoji: '⚡',
+        bgColor: '#F8CE46',
+        amounts: [149, 249, 389, 520],
+        items: [
+          'Milk + Bread + Eggs',
+          'Energy drinks + protein bars',
+          'Fruits basket (seasonal)',
+          'Quick snacks + beverages'
+        ],
+        wallpaper: 'linear-gradient(160deg, #1a1500 0%, #3d3300 60%, #1a1500 100%)',
+        glow: ['#F8CE46', '#ff9800'],
+        tagLabel: '⚡ Quick Commerce', tagBg: 'rgba(248,206,70,0.12)', tagColor: '#f59e0b',
+        accentStrip: '#F8CE46'
+      },
+
+      // ─── ONLINE SHOPPING ──────────────────────────────
+      {
+        id: 'amazon',
+        merchantId: 'amazon',
+        category: 'online_shopping',
+        appName: 'Amazon',
+        emoji: '📦',
+        bgColor: '#FF9900',
+        amounts: [499, 999, 1499, 2499, 3999, 5999],
+        items: [
+          'Kindle Paperwhite cover',
+          'Apple EarPods (USB-C)',
+          'Running shoes — Nike Pegasus',
+          'Instant Pot 6L pressure cooker',
+          'Laptop Stand + USB Hub',
+          'Echo Dot (5th Gen)'
+        ],
+        wallpaper: 'linear-gradient(160deg, #1a0e00 0%, #2d1d00 60%, #1a0e00 100%)',
+        glow: ['#FF9900', '#ffcc44'],
+        tagLabel: '📦 Online Shopping', tagBg: 'rgba(255,153,0,0.12)', tagColor: '#f59e0b',
+        accentStrip: '#FF9900'
+      },
+      {
+        id: 'flipkart',
+        merchantId: 'flipkart',
+        category: 'online_shopping',
+        appName: 'Flipkart',
+        emoji: '🛒',
+        bgColor: '#2874F0',
+        amounts: [799, 1299, 2499, 4999, 7999],
+        items: [
+          'boAt Rockerz 450 Headphones',
+          'Samsung Galaxy Buds FE',
+          'Cotton bedsheet set (King)',
+          'Mixer grinder 750W',
+          'Smart LED TV 32" (Mi)'
+        ],
+        wallpaper: 'linear-gradient(160deg, #00061a 0%, #001a4d 60%, #00061a 100%)',
+        glow: ['#2874F0', '#00b4ff'],
+        tagLabel: '🛍️ Online Shopping', tagBg: 'rgba(40,116,240,0.12)', tagColor: '#2874F0',
+        accentStrip: '#2874F0'
+      },
+      {
+        id: 'myntra',
+        merchantId: 'flipkart',
+        category: 'online_shopping',
+        appName: 'Myntra',
+        emoji: '👗',
+        bgColor: '#ff3f6c',
+        amounts: [899, 1399, 2199, 3499],
+        items: [
+          'Levi\'s Slim-Fit Jeans',
+          'Roadster Round-Neck Tee × 3',
+          'HRX Active Track Pants',
+          'Puma Sports Shoes'
+        ],
+        wallpaper: 'linear-gradient(160deg, #1a0010 0%, #3d0025 60%, #1a0010 100%)',
+        glow: ['#ff3f6c', '#ff9eb5'],
+        tagLabel: '👗 Fashion', tagBg: 'rgba(255,63,108,0.12)', tagColor: '#ff3f6c',
+        accentStrip: '#ff3f6c'
+      },
+
+      // ─── TRAVEL ───────────────────────────────────────
+      {
+        id: 'makemytrip',
+        merchantId: 'makemytrip',
+        category: 'travel',
+        appName: 'MakeMyTrip',
+        emoji: '✈️',
+        bgColor: '#EB2226',
+        amounts: [4250, 6800, 9200, 12500, 15000],
+        items: [
+          'DEL→BOM (IndiGo — 1 pax)',
+          'BLR→DEL (Air India — 2 pax)',
+          'Hotel room — Goa Marriott (2N)',
+          'Mumbai→Goa flight + hotel pkg',
+          'International flight — DEL→DXB'
+        ],
+        wallpaper: 'linear-gradient(160deg, #001433 0%, #00245e 60%, #001433 100%)',
+        glow: ['#EB2226', '#0ea5e9'],
+        tagLabel: '✈️ Travel', tagBg: 'rgba(235,34,38,0.12)', tagColor: '#EB2226',
+        accentStrip: '#EB2226'
+      },
+      {
+        id: 'uber',
+        merchantId: 'uber',
+        category: 'travel',
+        appName: 'Uber',
+        emoji: '🚗',
+        bgColor: '#000000',
+        amounts: [89, 149, 219, 310, 420],
+        items: [
+          'UberGo — Airport T3 to Dwarka',
+          'Uber Auto — Connaught Place',
+          'UberXL — Corporate park ride',
+          'Uber Premier — Gurgaon to Noida',
+          'UberGo — From home to mall'
+        ],
+        wallpaper: 'linear-gradient(160deg, #090909 0%, #1a1a1a 60%, #090909 100%)',
+        glow: ['#555', '#888'],
+        tagLabel: '🚗 Transport', tagBg: 'rgba(100,100,100,0.12)', tagColor: '#888',
+        accentStrip: '#555'
+      },
+
+      // ─── FUEL ─────────────────────────────────────────
+      {
+        id: 'hpcl',
+        merchantId: 'hp-petrol',
+        category: 'fuel',
+        appName: 'HPCL',
+        emoji: '⛽',
+        bgColor: '#00843D',
+        amounts: [500, 1000, 1500, 2000, 2500, 3000],
+        items: [
+          'Petrol — 12L @ ₹104.95/L',
+          'Petrol — 9L @ ₹104.95/L',
+          'Diesel — 18L @ ₹91.65/L',
+          'Petrol — 5L top-up',
+          'Petrol — full tank (40L Activa)'
+        ],
+        wallpaper: 'linear-gradient(160deg, #001a0e 0%, #003d1f 60%, #001a0e 100%)',
+        glow: ['#00843D', '#00c853'],
+        tagLabel: '⛽ Fuel', tagBg: 'rgba(0,132,61,0.12)', tagColor: '#00843D',
+        accentStrip: '#00843D'
+      },
+      {
+        id: 'iocl',
+        merchantId: 'ioc-petrol',
+        category: 'fuel',
+        appName: 'Indian Oil',
+        emoji: '🛢️',
+        bgColor: '#0066B3',
+        amounts: [500, 1000, 1500, 2000, 2500],
+        items: [
+          'Petrol — 10L @ ₹94.5/L',
+          'Full Tank — SUV (Petrol)',
+          'Diesel — 20L @ ₹87/L',
+          'Petrol — bike fill-up'
+        ],
+        wallpaper: 'linear-gradient(160deg, #000c1a 0%, #001f4d 60%, #000c1a 100%)',
+        glow: ['#0066B3', '#00aaff'],
+        tagLabel: '⛽ Fuel', tagBg: 'rgba(0,102,179,0.12)', tagColor: '#0066B3',
+        accentStrip: '#0066B3'
+      }
+    ];
+
+    // =====================================================
+    // UTILITY: pick random item from array
+    // =====================================================
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    function pickIdx(arr) {
+      const idx = Math.floor(Math.random() * arr.length);
+      return { value: arr[idx], idx };
+    }
+
+    // =====================================================
+    // SELECT SCENARIO on load
+    // =====================================================
+    const scenario = pick(SCENARIOS);
+    const amount   = pick(scenario.amounts);
+    const item     = pick(scenario.items);
+    const orderId  = scenario.appName.slice(0,3).toUpperCase() + '-' + Math.floor(Math.random() * 9000000 + 1000000);
+
+    // Set wallpaper + glow colours
+    document.getElementById('wallpaper').style.background = scenario.wallpaper;
+    document.getElementById('glow1').style.background = scenario.glow[0];
+    document.getElementById('glow2').style.background = scenario.glow[1];
+    document.documentElement.style.setProperty('--accent-strip', scenario.accentStrip);
+
+    // =====================================================
+    // LIVE CLOCK
+    // =====================================================
+    function updateClock() {
+      const now = new Date();
+      const hh  = now.getHours().toString().padStart(2, '0');
+      const mm  = now.getMinutes().toString().padStart(2, '0');
+      document.getElementById('clock').textContent       = `${hh}:${mm}`;
+      document.getElementById('status-time').textContent = `${hh}:${mm}`;
+
+      const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+      document.getElementById('date-display').textContent = now.toLocaleDateString('en-IN', opts);
+    }
+    setInterval(updateClock, 10000);
+    updateClock();
+
+    // =====================================================
+    // BUILD NOTIFICATIONS
+    // =====================================================
+    function relativeTime() {
+      const mins = Math.floor(Math.random() * 3);
+      return mins === 0 ? 'now' : `${mins}m ago`;
+    }
+
+    const container = document.getElementById('notif-container');
+
+    // Pick 1–2 ambient (background) notifications below the main one
+    const ambients = [
+      { app: 'PhonePe', icon: '💸', title: 'UPI payment received', desc: `₹${pick([200,500,1000])} credited to your bank account`, time: `${pick([3,5,8,12])}m ago`, bg: '#6739b7' },
+      { app: 'WhatsApp', icon: '💬', title: '3 new messages', desc: 'Riya: "Done ordering?"', time: `${pick([1,2,5])}m ago`, bg: '#25d366' },
+      { app: 'CRED', icon: '⭐', title: 'CRED Coins expiring soon', desc: `${pick([320,450,600,1200])} coins expire in 2 days. Use them now!`, time: '1h ago', bg: '#7c3aed' },
+      { app: 'Google Pay', icon: '₢', title: 'You saved ₹' + pick([18,35,50,80]), desc: 'Cashback on your last transaction', time: `${pick([2,4,7])}m ago`, bg: '#4285f4' },
+      { app: 'Bank Alert', icon: '🏦', title: 'Low balance alert', desc: `Account balance: ₹${pick([1200, 2500, 3400, 800])}`, time: 'just now', bg: '#1565c0' }
+    ];
+
+    const numAmbient = Math.floor(Math.random() * 2) + 1; // 1 or 2
+    const selectedAmbients = ambients.sort(() => Math.random() - 0.5).slice(0, numAmbient);
+
+    // Render ambient notifications FIRST (behind the main one visually via stagger)
+    selectedAmbients.forEach((a, i) => {
+      const div = document.createElement('div');
+      div.className = 'notification';
+      div.style.animationDelay = `${(i + 1) * 0.2}s`;
+      div.innerHTML = `
+        <div class="notif-icon-wrap" style="background:${a.bg}; font-size:17px;">${a.icon}</div>
+        <div class="notif-content">
+          <div class="notif-header">
+            <span class="notif-app-name">${a.app}</span>
+            <span class="notif-time">${a.time}</span>
+          </div>
+          <div class="notif-title">${a.title}</div>
+          <div class="notif-desc">${a.desc}</div>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    // Render the MAIN interactive payment notification (always last = on top visually)
+    const mainDiv = document.createElement('div');
+    mainDiv.className = 'notification primary';
+    mainDiv.style.animationDelay = `${(numAmbient + 1) * 0.2}s`;
+    mainDiv.style.setProperty('--accent-strip', scenario.accentStrip);
+    mainDiv.innerHTML = `
+      <div class="notif-icon-wrap" style="background:${scenario.bgColor}; box-shadow: 0 4px 14px ${scenario.bgColor}55;">
+        ${scenario.emoji}
+      </div>
+      <div class="notif-content">
+        <div class="notif-header">
+          <span class="notif-app-name">${scenario.appName}</span>
+          <span class="notif-time">${relativeTime()}</span>
+        </div>
+        <div class="notif-title">Payment Request: ₹${amount.toLocaleString('en-IN')}</div>
+        <div class="notif-desc">${item}. Tap to pay via CRED Smart Pay.</div>
+        <span class="notif-tag" style="--tag-bg:${scenario.tagBg};--tag-color:${scenario.tagColor};background:${scenario.tagBg};color:${scenario.tagColor};">${scenario.tagLabel}</span>
+      </div>
+    `;
+    mainDiv.addEventListener('click', () => triggerSmartPay());
+    container.appendChild(mainDiv);
+
+    // Also make ambient notifications non-interactive but feel alive
+    container.querySelectorAll('.notification:not(.primary)').forEach(n => {
+      n.style.cursor = 'default';
+      n.style.opacity = '0.9';
+    });
+
+    // =====================================================
+    // TRIGGER SMART PAY
+    // =====================================================
+    function triggerSmartPay() {
+      const baseUrl = window.location.origin + '/';
+      const url = `${baseUrl}?merchant=${scenario.merchantId}&category=${scenario.category}&amount=${amount}&orderId=${orderId}`;
+
+      // Visual feedback
+      mainDiv.style.transform = 'scale(0.96)';
+      mainDiv.style.opacity = '0.85';
+
+      setTimeout(() => { window.location.href = url; }, 280);
+    }
+  </script>
+
+</body>
+</html>
