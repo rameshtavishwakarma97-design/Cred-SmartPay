@@ -1,3 +1,11 @@
-AMEX Oracle:
-pgp25.shrey
-Srivas200623#@
+node_modules/
+dist/
+server/*.db
+server/*.db-shm
+server/*.db-wal
+server/cards.db
+server/database.sqlite
+.env
+server/.env
+*.log
+server_log.txt

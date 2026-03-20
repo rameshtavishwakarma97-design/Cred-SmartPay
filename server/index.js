@@ -15,20 +15,34 @@ import bcrypt from 'bcryptjs';
 
 // Dynamically import card data (ES module from src/)
 import { userCards, industryCards } from '../src/data/cards.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import fs from 'fs';
 
 const app = express();
 const PORT = process.env.PORT || 3005;
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true
-}));
+app.use(cors()); // Allow all origins for simplicity in unified deployment
 app.use(express.json());
+
+// Serve static files from the 'dist' directory (relative to project root)
+app.use(express.static('dist'));
 
 // Initialize DB and seed data
 console.log('📦 Initializing database...');
-const db = getDb();
+let db;
+try {
+  db = getDb();
+  console.log('✅ Database initialized');
+} catch (err) {
+  console.error('❌ Database initialization failed:', err);
+  process.exit(1);
+}
 
 // Seed cards into DB
 const allCards = [...userCards, ...industryCards].map(card => ({
@@ -127,6 +141,31 @@ app.get('/api/health', (req, res) => {
     activeOffers: offerCount.c,
     users: userCount.c
   });
+});
+
+app.get('/api/debug-static', (req, res) => {
+  try {
+    const files = fs.readdirSync(distPath);
+    res.json({ distPath, files });
+  } catch (err) {
+    res.json({ distPath, error: err.message });
+  }
+});
+
+// SPA Fallback: Any non-API route serves index.html
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  
+  const indexPath = path.resolve('dist', 'index.html');
+  try {
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      next();
+    }
+  } catch (err) {
+    next();
+  }
 });
 
 app.listen(PORT, () => {
