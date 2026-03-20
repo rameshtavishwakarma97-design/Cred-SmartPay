@@ -33,10 +33,10 @@ function runMigrations(db) {
   }
   try {
     db.prepare('ALTER TABLE users ADD COLUMN role TEXT DEFAULT "user"').run();
-  } catch (e) {}
+  } catch (e) { }
   try {
     db.prepare('ALTER TABLE transactions ADD COLUMN potential_savings REAL DEFAULT 0').run();
-  } catch (e) {}
+  } catch (e) { }
   try {
     db.exec(`
       CREATE TABLE IF NOT EXISTS recommendation_impressions (

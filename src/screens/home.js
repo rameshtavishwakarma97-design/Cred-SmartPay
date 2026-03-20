@@ -151,13 +151,13 @@ export function renderHome(app, navigate) {
 
   // Event listeners
   document.getElementById('qa-scan')?.addEventListener('click', () => navigate('merchants'));
-  document.getElementById('nav-smartpay')?.addEventListener('click', () => navigate('merchants'));
+  document.getElementById('nav-smartpay')?.addEventListener('click', () => navigate('merchants', { isSimulation: true }));
   document.getElementById('profile-btn')?.addEventListener('click', () => {
     // Custom Logout Modal
     const modalOverlay = document.createElement('div');
     modalOverlay.className = 'modal-overlay';
     modalOverlay.style.zIndex = '1000';
-    
+
     modalOverlay.innerHTML = `
       <div class="modal">
         <div class="modal-header">
@@ -172,14 +172,14 @@ export function renderHome(app, navigate) {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(modalOverlay);
-    
+
     document.getElementById('logout-cancel')?.addEventListener('click', () => {
       modalOverlay.classList.remove('active');
       setTimeout(() => modalOverlay.remove(), 300);
     });
-    
+
     document.getElementById('logout-confirm')?.addEventListener('click', () => {
       modalOverlay.classList.remove('active');
       setTimeout(() => {
@@ -188,7 +188,7 @@ export function renderHome(app, navigate) {
         navigate('login');
       }, 300);
     });
-    
+
     // Trigger entry animation
     requestAnimationFrame(() => {
       modalOverlay.classList.add('active');
@@ -201,7 +201,7 @@ export function renderHome(app, navigate) {
     if (pendingTxns.length > 0) {
       const container = document.getElementById('pending-requests-container');
       const section = document.getElementById('pending-requests-section');
-      
+
       container.innerHTML = pendingTxns.map(t => `
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: linear-gradient(to right, rgba(234,88,12,0.1), transparent); border-radius: var(--radius-lg); border: 1px solid rgba(234,88,12,0.2);">
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -217,9 +217,9 @@ export function renderHome(app, navigate) {
           </div>
         </div>
       `).join('');
-      
+
       section.style.display = 'block';
-      
+
       pendingTxns.forEach(t => {
         document.getElementById(`resume-txn-${t.id}`)?.addEventListener('click', () => {
           navigate('transaction', {
@@ -238,12 +238,12 @@ export function renderHome(app, navigate) {
     const cards = data.cards || [];
     const container = document.getElementById('card-carousel');
     if (!container) return;
-    
+
     if (cards.length === 0) {
       container.innerHTML = '<div style="padding: 24px; color: var(--text-tertiary); font-size: 0.8rem;">No cards mapped</div>';
       return;
     }
-    
+
     container.innerHTML = cards.map(c => `
       <div class="credit-card ${c.gradient || 'bg-gradient-to-br from-gray-800 to-gray-900'}" data-card-id="${c.card_id}">
         <div class="card-bank">${c.bank || 'Bank'}</div>
@@ -276,7 +276,7 @@ export function renderHome(app, navigate) {
     container.innerHTML = txns.map(t => {
       const emojiMap = { dining: '🍕', online_shopping: '🛒', grocery: '🥦', fuel: '⛽', travel: '✈️', movies: '🎬', utility: '💡', insurance: '🛡️', education: '📚', general: '💫' };
       const emoji = emojiMap[t.category] || '💳';
-      
+
       let dateText = 'Just now';
       if (t.created_at) {
         const d = new Date(t.created_at);

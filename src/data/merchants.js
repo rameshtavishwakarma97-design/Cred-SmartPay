@@ -37,7 +37,16 @@ export const merchants = [
     upiId: 'amazon@apl',
     credOffer: '10% CRED cashback up to ₹200',
     credCashback: 4,
-    popular: true
+    popular: true,
+    subCategories: [
+      { id: 'amazon_5999', label: 'General Orders (MCC 5999)', mcc: '5999', category: 'online_shopping', description: 'Miscellaneous & Specialty Retail' },
+      { id: 'amazon_5399', label: 'General Shopping / GV (MCC 5399)', mcc: '5399', category: 'online_shopping', description: 'Miscellaneous General Merchandise' },
+      { id: 'amazon_5411', label: 'Amazon Fresh (MCC 5411)', mcc: '5411', category: 'grocery', description: 'Groceries & Supermarkets' },
+      { id: 'amazon_6540', label: 'Wallet Top-ups (MCC 6540)', mcc: '6540', category: 'online_shopping', description: 'Stored Value Card Purchase/Load' },
+      { id: 'amazon_6260', label: 'Amazon Pay Services (MCC 6260)', mcc: '6260', category: 'online_shopping', description: 'Amazon Pay gateway' },
+      { id: 'amazon_5815', label: 'Digital Goods (MCC 5815)', mcc: '5815', category: 'online_shopping', description: 'Media, Books, Movies' },
+      { id: 'amazon_5947', label: 'Gift Cards (MCC 5947)', mcc: '5947', category: 'online_shopping', description: 'Gift, Card, Novelty Shops' }
+    ]
   },
   {
     id: 'flipkart',
