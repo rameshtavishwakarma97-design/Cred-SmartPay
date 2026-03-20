@@ -2,7 +2,7 @@
 // API Utility — fetch with JWT token
 // ============================================
 
-const API_BASE = 'http://localhost:3005/api';
+const API_BASE = '/api';
 
 export function getToken() {
   return localStorage.getItem('smartpay_token');

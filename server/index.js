@@ -27,7 +27,25 @@ const app = express();
 const PORT = process.env.PORT || 3005;
 
 // Middleware
-app.use(cors()); // Allow all origins for simplicity in unified deployment
+const allowedOrigins = [
+  'https://cred-smartpay-production.up.railway.app',
+  'http://localhost:5173', // Vite default port
+  'http://localhost:3000',
+  'http://localhost:3005'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Serve static files from the 'dist' directory (relative to project root)
