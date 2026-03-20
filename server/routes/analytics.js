@@ -65,7 +65,43 @@ router.get('/stats', authMiddleware, (req, res) => {
       GROUP BY event_name
     `).all();
 
-    // 3. Current system state
+    // 3. Financial Metrics
+    const financialStats = db.prepare(`
+      SELECT 
+        SUM(savings) as total_savings,
+        AVG(savings) as avg_savings
+      FROM transactions 
+      WHERE status = 'completed' AND is_simulation = 0
+    `).get();
+    
+    // 4. Top Merchants
+    const topMerchants = db.prepare(`
+      SELECT merchant_name, COUNT(*) as count, SUM(savings) as savings
+      FROM transactions
+      WHERE status = 'completed' AND is_simulation = 0
+      GROUP BY merchant_name
+      ORDER BY count DESC
+      LIMIT 5
+    `).all();
+
+    // 5. Top Cards
+    const topCards = db.prepare(`
+      SELECT card_id, COUNT(*) as count, SUM(savings) as savings
+      FROM transactions
+      WHERE status = 'completed' AND is_simulation = 0
+      GROUP BY card_id
+      ORDER BY count DESC
+      LIMIT 5
+    `).all();
+
+    // 6. System Throughput (24h)
+    const last24h = db.prepare(`
+      SELECT COUNT(*) as count
+      FROM transactions
+      WHERE created_at >= datetime('now', '-1 day') AND is_simulation = 0
+    `).get();
+
+    // 7. Current system state
     const currentPending = db.prepare("SELECT COUNT(*) as count FROM transactions WHERE status = 'pending' AND is_simulation = 0").get();
     const totalTxns = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE is_simulation = 0').get();
 
@@ -83,7 +119,14 @@ router.get('/stats', authMiddleware, (req, res) => {
       }, {}),
       state: {
         pendingTransactions: currentPending.count,
-        totalTransactions: totalTxns.count
+        totalTransactions: totalTxns.count,
+        last24hVolume: last24h.count
+      },
+      financials: {
+        totalSavings: Math.round(financialStats.total_savings || 0),
+        avgSavings: Math.round(financialStats.avg_savings || 0),
+        topMerchants,
+        topCards
       }
     });
   } catch (e) {
