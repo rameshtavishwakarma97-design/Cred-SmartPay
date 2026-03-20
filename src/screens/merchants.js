@@ -1,168 +1,123 @@
 // ============================================
-// Merchant Database
+// Merchant Selection Screen
 // ============================================
 
-export const merchants = [
-  {
-    id: 'zomato',
-    name: 'Zomato',
-    category: 'dining',
-    categoryLabel: 'Dining & Food',
-    emoji: '🍕',
-    bgColor: '#E23744',
-    upiId: 'zomato@hdfcbank',
-    credOffer: 'Up to 20% CRED cashback',
-    credCashback: 5,
-    popular: true
-  },
-  {
-    id: 'swiggy',
-    name: 'Swiggy',
-    category: 'dining',
-    categoryLabel: 'Dining & Food',
-    emoji: '🍔',
-    bgColor: '#FC8019',
-    upiId: 'swiggy@icici',
-    credOffer: 'Flat ₹75 off on ₹500+',
-    credCashback: 3,
-    popular: true
-  },
-  {
-    id: 'amazon',
-    name: 'Amazon',
-    category: 'online_shopping',
-    categoryLabel: 'Online Shopping',
-    emoji: '📦',
-    bgColor: '#FF9900',
-    upiId: 'amazon@apl',
-    credOffer: '10% CRED cashback up to ₹200',
-    credCashback: 4,
-    popular: true,
-    subCategories: [
-      { id: 'amazon_5999', label: 'General Orders (MCC 5999)', mcc: '5999', category: 'online_shopping', description: 'Miscellaneous & Specialty Retail' },
-      { id: 'amazon_5399', label: 'General Shopping / GV (MCC 5399)', mcc: '5399', category: 'online_shopping', description: 'Miscellaneous General Merchandise' },
-      { id: 'amazon_5411', label: 'Amazon Fresh (MCC 5411)', mcc: '5411', category: 'grocery', description: 'Groceries & Supermarkets' },
-      { id: 'amazon_6540', label: 'Wallet Top-ups (MCC 6540)', mcc: '6540', category: 'online_shopping', description: 'Stored Value Card Purchase/Load' },
-      { id: 'amazon_6260', label: 'Amazon Pay Services (MCC 6260)', mcc: '6260', category: 'online_shopping', description: 'Amazon Pay gateway' },
-      { id: 'amazon_5815', label: 'Digital Goods (MCC 5815)', mcc: '5815', category: 'online_shopping', description: 'Media, Books, Movies' },
-      { id: 'amazon_5947', label: 'Gift Cards (MCC 5947)', mcc: '5947', category: 'online_shopping', description: 'Gift, Card, Novelty Shops' }
-    ]
-  },
-  {
-    id: 'flipkart',
-    name: 'Flipkart',
-    category: 'online_shopping',
-    categoryLabel: 'Online Shopping',
-    emoji: '🛒',
-    bgColor: '#2874F0',
-    upiId: 'flipkart@axisbank',
-    credOffer: 'CRED coins worth ₹150',
-    credCashback: 3,
-    popular: true
-  },
-  {
-    id: 'bigbasket',
-    name: 'BigBasket',
-    category: 'grocery',
-    categoryLabel: 'Grocery',
-    emoji: '🥬',
-    bgColor: '#84C225',
-    upiId: 'bigbasket@ybl',
-    credOffer: '₹100 off on ₹1000+',
-    credCashback: 2,
-    popular: true
-  },
-  {
-    id: 'blinkit',
-    name: 'Blinkit',
-    category: 'grocery',
-    categoryLabel: 'Grocery',
-    emoji: '⚡',
-    bgColor: '#F8CE46',
-    upiId: 'blinkit@paytm',
-    credOffer: 'Flat ₹50 CRED cashback',
-    credCashback: 2,
-    popular: true
-  },
-  {
-    id: 'hp-petrol',
-    name: 'HP Petroleum',
-    category: 'fuel',
-    categoryLabel: 'Fuel',
-    emoji: '⛽',
-    bgColor: '#00843D',
-    upiId: 'hppetrol@sbi',
-    credOffer: null,
-    credCashback: 0,
-    popular: false
-  },
-  {
-    id: 'ioc-petrol',
-    name: 'Indian Oil',
-    category: 'fuel',
-    categoryLabel: 'Fuel',
-    emoji: '🛢️',
-    bgColor: '#0066B3',
-    upiId: 'iocl@icici',
-    credOffer: '1% fuel surcharge waiver',
-    credCashback: 1,
-    popular: false
-  },
-  {
-    id: 'makemytrip',
-    name: 'MakeMyTrip',
-    category: 'travel',
-    categoryLabel: 'Travel',
-    emoji: '✈️',
-    bgColor: '#EB2226',
-    upiId: 'makemytrip@hdfcbank',
-    credOffer: 'Up to ₹500 CRED cashback',
-    credCashback: 3,
-    popular: true
-  },
-  {
-    id: 'uber',
-    name: 'Uber',
-    category: 'travel',
-    categoryLabel: 'Travel & Transport',
-    emoji: '🚗',
-    bgColor: '#000000',
-    upiId: 'uber@icici',
-    credOffer: '15% off up to ₹100',
-    credCashback: 2,
-    popular: false
-  },
-  {
-    id: 'croma',
-    name: 'Croma',
-    category: 'online_shopping',
-    categoryLabel: 'Electronics',
-    emoji: '💻',
-    bgColor: '#00A651',
-    upiId: 'croma@hdfcbank',
-    credOffer: 'CRED coins worth ₹300',
-    credCashback: 2,
-    popular: false
-  },
-  {
-    id: 'dmart',
-    name: 'DMart',
-    category: 'grocery',
-    categoryLabel: 'Grocery & Essentials',
-    emoji: '🏪',
-    bgColor: '#006838',
-    upiId: 'dmart@ybl',
-    credOffer: null,
-    credCashback: 0,
-    popular: false
-  }
-];
+import { merchants, categories } from '../data/merchants.js';
 
-export const categories = [
-  { id: 'all', label: 'All', emoji: '✨' },
-  { id: 'dining', label: 'Dining', emoji: '🍽️' },
-  { id: 'online_shopping', label: 'Shopping', emoji: '🛍️' },
-  { id: 'grocery', label: 'Grocery', emoji: '🥦' },
-  { id: 'fuel', label: 'Fuel', emoji: '⛽' },
-  { id: 'travel', label: 'Travel', emoji: '✈️' }
-];
+export function renderMerchants(app, navigate, params = {}) {
+  const screen = document.createElement('div');
+  screen.className = 'screen';
+  screen.id = 'merchants-screen';
+
+  screen.innerHTML = `
+    <div class="screen-header">
+      <button class="back-btn" id="merchants-back">←</button>
+      <span class="header-title">SmartPay</span>
+      <div class="header-action"></div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar stagger-1">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="merchant-search" placeholder="Search merchants..." autocomplete="off" />
+    </div>
+
+    <!-- Category Pills -->
+    <div class="pill-row stagger-2" id="category-pills">
+      ${categories.map((cat, i) => `
+        <button class="pill ${i === 0 ? 'active' : ''}" data-category="${cat.id}">
+          ${cat.emoji} ${cat.label}
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- Featured Merchants -->
+    <div class="section-header stagger-3">
+      <span class="section-title">Popular Merchants</span>
+    </div>
+
+    <div class="screen-padding stagger-3" id="merchant-grid" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 32px;">
+      ${renderMerchantList(merchants)}
+    </div>
+  `;
+
+  app.innerHTML = '';
+  app.appendChild(screen);
+
+  // Back button
+  document.getElementById('merchants-back')?.addEventListener('click', () => navigate('home'));
+
+  // Category filtering
+  let activeCategory = 'all';
+  document.getElementById('category-pills')?.addEventListener('click', (e) => {
+    const pill = e.target.closest('.pill');
+    if (!pill) return;
+
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeCategory = pill.dataset.category;
+
+    filterMerchants(activeCategory, document.getElementById('merchant-search')?.value || '');
+  });
+
+  // Search filtering
+  document.getElementById('merchant-search')?.addEventListener('input', (e) => {
+    filterMerchants(activeCategory, e.target.value);
+  });
+
+  // Merchant click
+  document.getElementById('merchant-grid')?.addEventListener('click', (e) => {
+    const tile = e.target.closest('.merchant-tile');
+    if (!tile) return;
+
+    tile.style.transform = 'scale(0.97)';
+    setTimeout(() => {
+      const merchantId = tile.dataset.merchantId;
+      const m = merchants.find(merch => merch.id === merchantId);
+      if (m && m.subCategories) {
+        navigate('category_selection', { merchantId, isSimulation: params.isSimulation });
+      } else {
+        navigate('transaction', { merchantId, isSimulation: params.isSimulation });
+      }
+    }, 150);
+  });
+}
+
+function filterMerchants(category, search) {
+  let filtered = merchants;
+
+  if (category !== 'all') {
+    filtered = filtered.filter(m => m.category === category);
+  }
+
+  if (search.trim()) {
+    const q = search.toLowerCase();
+    filtered = filtered.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      m.categoryLabel.toLowerCase().includes(q)
+    );
+  }
+
+  const grid = document.getElementById('merchant-grid');
+  if (grid) {
+    grid.innerHTML = filtered.length
+      ? renderMerchantList(filtered)
+      : `<div style="text-align: center; padding: 48px 20px; color: var(--text-tertiary); font-size: 0.85rem;">No merchants found</div>`;
+  }
+}
+
+function renderMerchantList(list) {
+  return list.map(m => `
+    <div class="merchant-tile" data-merchant-id="${m.id}">
+      <div class="merchant-logo" style="background: ${m.bgColor}22;">
+        <span>${m.emoji}</span>
+      </div>
+      <div class="merchant-info">
+        <div class="merchant-name">${m.name}</div>
+        <div class="merchant-category">${m.categoryLabel}</div>
+        ${m.credOffer ? `<div class="merchant-offer" style="margin-top: 4px; display: inline-block;">${m.credOffer}</div>` : ''}
+      </div>
+      <div class="merchant-arrow">›</div>
+    </div>
+  `).join('');
+}
