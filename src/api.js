@@ -2,7 +2,7 @@
 // API Utility — fetch with JWT token
 // ============================================
 
-const API_BASE = '/api';
+const API_BASE = 'http://localhost:3005/api';
 
 export function getToken() {
   return localStorage.getItem('smartpay_token');
@@ -46,11 +46,11 @@ export async function api(endpoint, options = {}) {
   }
 
   const res = await fetch(`${API_BASE}${endpoint}`, config);
-  
+
   // Try to parse JSON, if it fails and res is not OK, throw status error
   let data;
   const contentType = res.headers.get('content-type');
-  
+
   if (contentType && contentType.includes('application/json')) {
     data = await res.json();
   } else {
@@ -125,7 +125,7 @@ export async function getCards() {
 }
 
 // Recommendation helper
-export async function getSmartRecommendation(merchantId, merchantName, category, amount, credCashback = 0) {
+export async function getSmartRecommendation(merchantId, merchantName, category, amount, credCashback = 0, mcc = null) {
   return api('/recommend', {
     method: 'POST',
     body: {
@@ -133,7 +133,8 @@ export async function getSmartRecommendation(merchantId, merchantName, category,
       merchant_name: merchantName,
       category,
       amount,
-      cred_cashback: credCashback
+      cred_cashback: credCashback,
+      mcc: mcc
     }
   });
 }

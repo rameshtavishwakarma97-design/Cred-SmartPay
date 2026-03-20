@@ -26,7 +26,7 @@ const POINT_VALUES = {
 // POST /api/recommend — Smart recommendation with cap tracking + offers
 router.post('/', authMiddleware, (req, res) => {
   const startTime = Date.now();
-  const { merchant_id, merchant_name, category, amount, cred_cashback } = req.body;
+  const { merchant_id, merchant_name, category, amount, cred_cashback, mcc } = req.body;
 
   if (!category || !amount) {
     return res.status(400).json({ error: 'category and amount required' });
@@ -88,7 +88,19 @@ router.post('/', authMiddleware, (req, res) => {
   const userResults = userCardDetails.map(uc => {
     const card = uc.cardData;
     const rewards = card.rewards;
-    const rewardRule = rewards[category] || rewards.default;
+    let rewardRule = rewards[category] || rewards.default;
+
+    // Special logic for Amazon MCCs — Some categories are excluded from 5% categories
+    if (merchant_id === 'amazon' && mcc) {
+      // 5815: Digital Goods, 5947: Gift Cards, 6540: Wallet Top-ups
+      const excludedMCCs = ['5815', '5947', '6540'];
+      if (excludedMCCs.includes(mcc)) {
+        if (card.name.includes('Millennia') || card.name.includes('Cashback SBI')) {
+          // For these cards, these MCCs often fallback to the base rate
+          rewardRule = rewards.default || { type: 'cashback', rate: 1, label: '1% Base Reward' };
+        }
+      }
+    }
 
     if (!rewardRule) {
       return { card: uc, savings: 0, label: 'No applicable reward', totalSavings: 0, reasoning: 'No reward rule', breakdown: [] };
@@ -126,7 +138,7 @@ router.post('/', authMiddleware, (req, res) => {
     // Find the single best offer (don't stack them)
     let bestOffer = null;
     let bestOfferSavings = 0;
-    
+
     for (const offer of cardOffers) {
       const offerSavings = calculateOfferSavings(offer, txnAmount);
       if (offerSavings > bestOfferSavings) {
@@ -139,7 +151,7 @@ router.post('/', authMiddleware, (req, res) => {
     let dineoutSavings = 0;
     if (rewardRule.dineoutDiscount && category === 'dining') {
       dineoutSavings = (txnAmount * rewardRule.dineoutDiscount) / 100;
-      
+
       // If Dineout is better than the best offer, apply Dineout instead
       if (dineoutSavings > bestOfferSavings) {
         cardSavings += dineoutSavings;
@@ -150,7 +162,7 @@ router.post('/', authMiddleware, (req, res) => {
         breakdown.push({ type: 'dineout', text: `${rewardRule.dineoutDiscount}% Dineout discount`, value: dineoutSavings });
       }
     }
-    
+
     // Apply the best offer if it beat Dineout or if there was no Dineout
     if (bestOffer && bestOfferSavings > 0) {
       cardSavings += bestOfferSavings;
@@ -165,7 +177,7 @@ router.post('/', authMiddleware, (req, res) => {
 
     // CRED cashback
     const credSaving = cred_cashback ? (txnAmount * cred_cashback) / 100 : 0;
-    
+
     // Split into Fixed vs Estimated
     // FIXED: base_reward + constant offers (if any) + CRED cashback
     // ESTIMATED: Dineout + variable offers
@@ -213,12 +225,22 @@ router.post('/', authMiddleware, (req, res) => {
     })
     .map(c => {
       const rewards = JSON.parse(c.rewards);
-      const rule = rewards[category] || rewards.default;
+      let rule = rewards[category] || rewards.default;
+
+      // Special logic for Amazon MCCs for industry recommendations
+      if (merchant_id === 'amazon' && mcc) {
+        if (['5815', '5947', '6540'].includes(mcc)) {
+          if (c.name.includes('Millennia') || c.name.includes('Cashback SBI')) {
+            rule = rewards.default || { type: 'cashback', rate: 1, label: '1% Base Reward' };
+          }
+        }
+      }
+
       if (!rule) return null;
 
       const result = calculateBaseSavings(rule, txnAmount, c.bank);
       const credSaving = cred_cashback ? (txnAmount * cred_cashback) / 100 : 0;
-      
+
       let dineoutVal = 0;
       if (rule.dineoutDiscount && category === 'dining') {
         dineoutVal = (txnAmount * rule.dineoutDiscount) / 100;
@@ -279,7 +301,7 @@ router.post('/', authMiddleware, (req, res) => {
 router.put('/:id/select', authMiddleware, (req, res) => {
   const { selected_card_id } = req.body;
   const db = getDb();
-  
+
   try {
     const result = db.prepare(`
       UPDATE recommendation_impressions 

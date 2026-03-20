@@ -19,6 +19,11 @@ export function renderRecommendation(app, navigate, params) {
 
   // Show loading state
   screen.innerHTML = `
+    ${params.isSimulation ? `
+      <div style="background: var(--orange-sunshine); color: #000; text-align: center; padding: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+        Simulation Mode 🧠 — Discovery Only
+      </div>
+    ` : ''}
     <div class="screen-header">
       <button class="back-btn" id="reco-back">←</button>
       <span class="header-title">🧠 Smart Recommendation</span>
@@ -35,7 +40,16 @@ export function renderRecommendation(app, navigate, params) {
   app.appendChild(screen);
 
   document.getElementById('reco-back')?.addEventListener('click', () => {
-    navigate('transaction', { merchantId: merchant.id, amount: params.amount, transactionId: params.transactionId });
+    navigate('transaction', {
+      merchantId: merchant.id,
+      amount: params.amount,
+      transactionId: params.transactionId,
+      subCategory: params.subCategory,
+      subCategoryLabel: params.subCategoryLabel,
+      mcc: params.mcc,
+      category: params.category,
+      isSimulation: params.isSimulation
+    });
   });
 
   // Try server-side recommendation first, fallback to local
@@ -43,6 +57,7 @@ export function renderRecommendation(app, navigate, params) {
 }
 
 async function loadRecommendation(screen, navigate, merchant, amount, params) {
+  console.log('DEBUG: Recommendation isSimulation:', params.isSimulation);
   let reco;
   let useServer = false;
 
@@ -51,7 +66,12 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
 
   try {
     reco = await getSmartRecommendation(
-      merchant.id, merchant.name, merchant.category, amount, merchant.credCashback || 0
+      merchant.id,
+      merchant.name,
+      params.category || merchant.category,
+      amount,
+      merchant.credCashback || 0,
+      params.mcc
     );
     useServer = true;
   } catch (err) {
@@ -70,6 +90,11 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
   // Guard: if no cards found, show error state with working back button
   if (!reco || !reco.bestUserCard || !reco.userCards || reco.userCards.length === 0) {
     screen.innerHTML = `
+      ${params.isSimulation ? `
+        <div style="background: var(--orange-sunshine); color: #000; text-align: center; padding: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+          Simulation Mode 🧠 — Discovery Only
+        </div>
+      ` : ''}
       <div class="screen-header">
         <button class="back-btn" id="reco-back">←</button>
         <span class="header-title">🧠 Smart Recommendation</span>
@@ -90,6 +115,11 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
   const maxBar = Math.max(...reco.userCards.map(r => r.totalSavings), 1);
 
   screen.innerHTML = `
+    ${params.isSimulation ? `
+      <div style="background: var(--orange-sunshine); color: #000; text-align: center; padding: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+        Simulation Mode 🧠 — Discovery Only
+      </div>
+    ` : ''}
     <div class="screen-header">
       <button class="back-btn" id="reco-back">←</button>
       <span class="header-title">🧠 Smart Recommendation</span>
@@ -228,9 +258,15 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
 
     <!-- Pay Button -->
     <div style="padding: 12px 24px 32px;">
-      <button class="neo-btn neo-btn-primary neo-btn-full" id="proceed-pay-btn">
-        Pay ₹${amount.toLocaleString('en-IN')} with ${reco.bestUserCard.card.name}
-      </button>
+      ${params.isSimulation ? `
+        <button class="neo-btn neo-btn-accent neo-btn-full" id="done-sim-btn">
+          ✨ Done — Back to Home
+        </button>
+      ` : `
+        <button class="neo-btn neo-btn-primary neo-btn-full" id="proceed-pay-btn">
+          Pay ₹${amount.toLocaleString('en-IN')} with ${reco.bestUserCard.card.name}
+        </button>
+      `}
     </div>
   `;
 
@@ -245,16 +281,27 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
 
   // Back button
   screen.querySelector('#reco-back')?.addEventListener('click', () => {
-    navigate('transaction', { merchantId: merchant.id, amount: params.amount, transactionId: params.transactionId });
+    navigate('transaction', {
+      merchantId: merchant.id,
+      amount: params.amount,
+      transactionId: params.transactionId,
+      subCategory: params.subCategory,
+      subCategoryLabel: params.subCategoryLabel,
+      mcc: params.mcc,
+      category: params.category,
+      isSimulation: params.isSimulation
+    });
   });
 
   // Proceed to confirm
   let selectedCard = reco.bestUserCard;
 
+  screen.querySelector('#done-sim-btn')?.addEventListener('click', () => navigate('home'));
+
   screen.querySelector('#proceed-pay-btn')?.addEventListener('click', () => {
     // Analytics: Log selection
     updateRecommendationSelection(reco.impressionId, selectedCard.card.id);
-    
+
     navigate('confirm', {
       transactionId: params.transactionId,
       merchantId: merchant.id,
