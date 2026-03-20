@@ -11,9 +11,7 @@
     "start": "node server/index.js",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "vite": "^8.0.0"
-  },
+  "devDependencies": {},
   "dependencies": {
     "vite": "^8.0.0",
     "@google/generative-ai": "^0.24.1",
