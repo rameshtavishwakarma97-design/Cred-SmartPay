@@ -71,7 +71,8 @@ async function loadRecommendation(screen, navigate, merchant, amount, params) {
       params.category || merchant.category,
       amount,
       merchant.credCashback || 0,
-      params.mcc
+      params.mcc,
+      params.isSimulation
     );
     useServer = true;
   } catch (err) {

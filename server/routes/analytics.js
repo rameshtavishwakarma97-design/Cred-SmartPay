@@ -51,8 +51,10 @@ router.get('/stats', authMiddleware, (req, res) => {
         AND ABS(RI.amount - T.amount) < 0.01
         AND T.card_id = RI.selected_card_id
         AND T.status = 'completed'
+        AND T.is_simulation = 0
         AND T.created_at >= RI.created_at
         AND T.created_at <= datetime(RI.created_at, '+15 minutes')
+      WHERE RI.is_simulation = 0
     `).get();
     console.log('DEBUG: recStats:', recStats);
 
@@ -64,8 +66,8 @@ router.get('/stats', authMiddleware, (req, res) => {
     `).all();
 
     // 3. Current system state
-    const currentPending = db.prepare("SELECT COUNT(*) as count FROM transactions WHERE status = 'pending'").get();
-    const totalTxns = db.prepare('SELECT COUNT(*) as count FROM transactions').get();
+    const currentPending = db.prepare("SELECT COUNT(*) as count FROM transactions WHERE status = 'pending' AND is_simulation = 0").get();
+    const totalTxns = db.prepare('SELECT COUNT(*) as count FROM transactions WHERE is_simulation = 0').get();
 
     res.json({
       recommendations: {

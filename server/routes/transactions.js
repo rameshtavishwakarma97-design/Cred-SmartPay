@@ -10,7 +10,7 @@ const router = Router();
 
 // POST /api/transactions — Record a payment
 router.post('/', authMiddleware, (req, res) => {
-  const { card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id } = req.body;
+  const { card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id, is_simulation } = req.body;
 
   if (!card_id || !merchant_id || !category || !amount) {
     return res.status(400).json({ error: 'card_id, merchant_id, category, amount required' });
@@ -19,9 +19,9 @@ router.post('/', authMiddleware, (req, res) => {
   const db = getDb();
 
   const result = db.prepare(`
-    INSERT INTO transactions (user_id, card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(req.userId, card_id, merchant_id, merchant_name || '', category, amount, savings || 0, potential_savings || 0, offer_id || null);
+    INSERT INTO transactions (user_id, card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id, is_simulation)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(req.userId, card_id, merchant_id, merchant_name || '', category, amount, savings || 0, potential_savings || 0, offer_id || null, is_simulation ? 1 : 0);
 
   // Record offer usage if applicable
   if (offer_id) {
@@ -38,7 +38,7 @@ router.post('/', authMiddleware, (req, res) => {
 
 // POST /api/transactions/pending — Create a pending inbound request
 router.post('/pending', authMiddleware, (req, res) => {
-  const { merchant_id, merchant_name, category, amount } = req.body;
+  const { merchant_id, merchant_name, category, amount, is_simulation } = req.body;
 
   if (!merchant_id || !category || !amount) {
     return res.status(400).json({ error: 'merchant_id, category, amount required' });
@@ -46,9 +46,9 @@ router.post('/pending', authMiddleware, (req, res) => {
 
   const db = getDb();
   const result = db.prepare(`
-    INSERT INTO transactions (user_id, merchant_id, merchant_name, category, amount, status)
-    VALUES (?, ?, ?, ?, ?, 'pending')
-  `).run(req.userId, merchant_id, merchant_name || '', category, amount);
+    INSERT INTO transactions (user_id, merchant_id, merchant_name, category, amount, status, is_simulation)
+    VALUES (?, ?, ?, ?, ?, 'pending', ?)
+  `).run(req.userId, merchant_id, merchant_name || '', category, amount, is_simulation ? 1 : 0);
 
   res.status(201).json({
     id: result.lastInsertRowid,
@@ -147,7 +147,7 @@ router.get('/stats', authMiddleware, (req, res) => {
       COALESCE(SUM(savings), 0) as total_savings,
       COALESCE(SUM(potential_savings), 0) as total_potential
     FROM transactions
-    WHERE user_id = ? AND created_at >= ? AND status = 'completed'
+    WHERE user_id = ? AND created_at >= ? AND status = 'completed' AND is_simulation = 0
   `).get(req.userId, monthStart.toISOString());
 
   // Per-category breakdown this month
@@ -159,7 +159,7 @@ router.get('/stats', authMiddleware, (req, res) => {
       SUM(savings) as savings,
       SUM(potential_savings) as potential
     FROM transactions
-    WHERE user_id = ? AND created_at >= ? AND status = 'completed'
+    WHERE user_id = ? AND created_at >= ? AND status = 'completed' AND is_simulation = 0
     GROUP BY category
     ORDER BY total DESC
   `).all(req.userId, monthStart.toISOString());
@@ -174,7 +174,7 @@ router.get('/stats', authMiddleware, (req, res) => {
       SUM(potential_savings) as total_potential,
       COUNT(*) as txn_count
     FROM transactions
-    WHERE user_id = ? AND created_at >= ? AND status = 'completed'
+    WHERE user_id = ? AND created_at >= ? AND status = 'completed' AND is_simulation = 0
     GROUP BY card_id, category
   `).all(req.userId, monthStart.toISOString());
 
@@ -186,7 +186,7 @@ router.get('/stats', authMiddleware, (req, res) => {
       COALESCE(SUM(savings), 0) as total_savings,
       COALESCE(SUM(potential_savings), 0) as total_potential
     FROM transactions
-    WHERE user_id = ? AND status = 'completed'
+    WHERE user_id = ? AND status = 'completed' AND is_simulation = 0
   `).get(req.userId);
 
   res.json({
@@ -212,7 +212,7 @@ router.get('/cap-usage', authMiddleware, (req, res) => {
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  let where = 'WHERE user_id = ? AND created_at >= ?';
+  let where = 'WHERE user_id = ? AND created_at >= ? AND is_simulation = 0';
   const params = [req.userId, monthStart.toISOString()];
 
   if (card_id) {

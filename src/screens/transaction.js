@@ -189,7 +189,8 @@ export function renderTransaction(app, navigate, params) {
         params.category || merchant.category,
         parseFloat(amount),
         merchant.credCashback || 0,
-        params.mcc
+        params.mcc,
+        params.isSimulation
       );
       if (reco && reco.bestUserCard) {
         potentialSavings = reco.bestUserCard.totalSavings || 0;

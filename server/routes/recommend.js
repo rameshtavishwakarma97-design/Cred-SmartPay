@@ -26,7 +26,7 @@ const POINT_VALUES = {
 // POST /api/recommend — Smart recommendation with cap tracking + offers
 router.post('/', authMiddleware, (req, res) => {
   const startTime = Date.now();
-  const { merchant_id, merchant_name, category, amount, cred_cashback, mcc } = req.body;
+  const { merchant_id, merchant_name, category, amount, cred_cashback, mcc, is_simulation } = req.body;
 
   if (!category || !amount) {
     return res.status(400).json({ error: 'category and amount required' });
@@ -60,7 +60,7 @@ router.post('/', authMiddleware, (req, res) => {
   const capUsage = db.prepare(`
     SELECT card_id, category, SUM(savings) as used_savings, COUNT(*) as txn_count
     FROM transactions
-    WHERE user_id = ? AND created_at >= ? AND status = 'completed'
+    WHERE user_id = ? AND created_at >= ? AND status = 'completed' AND is_simulation = 0
     GROUP BY card_id, category
   `).all(req.userId, monthStart.toISOString());
 
@@ -274,9 +274,9 @@ router.post('/', authMiddleware, (req, res) => {
   if (bestUser) {
     try {
       const result = db.prepare(`
-        INSERT INTO recommendation_impressions (user_id, merchant_id, amount, recommended_card_id, latency_ms)
-        VALUES (?, ?, ?, ?, ?)
-      `).run(req.userId, merchant_id || 'unknown', txnAmount, bestUser.card.id, latencyMs);
+        INSERT INTO recommendation_impressions (user_id, merchant_id, amount, recommended_card_id, latency_ms, is_simulation)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(req.userId, merchant_id || 'unknown', txnAmount, bestUser.card.id, latencyMs, is_simulation ? 1 : 0);
       impressionId = result.lastInsertRowid;
     } catch (e) {
       console.error('Failed to log recommendation impression', e);

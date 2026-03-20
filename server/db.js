@@ -38,6 +38,12 @@ function runMigrations(db) {
     db.prepare('ALTER TABLE transactions ADD COLUMN potential_savings REAL DEFAULT 0').run();
   } catch (e) { }
   try {
+    db.prepare('ALTER TABLE transactions ADD COLUMN is_simulation INTEGER DEFAULT 0').run();
+  } catch (e) { }
+  try {
+    db.prepare('ALTER TABLE recommendation_impressions ADD COLUMN is_simulation INTEGER DEFAULT 0').run();
+  } catch (e) { }
+  try {
     db.exec(`
       CREATE TABLE IF NOT EXISTS recommendation_impressions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -86,6 +92,7 @@ function runMigrations(db) {
           savings REAL DEFAULT 0,
           offer_id INTEGER,
           status TEXT DEFAULT 'completed',
+          is_simulation INTEGER DEFAULT 0,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (user_id) REFERENCES users(id)
         );
@@ -138,6 +145,7 @@ function initSchema() {
       potential_savings REAL DEFAULT 0,
       offer_id INTEGER,
       status TEXT DEFAULT 'completed',
+      is_simulation INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
@@ -207,6 +215,7 @@ function initSchema() {
       recommended_card_id TEXT NOT NULL,
       selected_card_id TEXT,
       latency_ms INTEGER,
+      is_simulation INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
