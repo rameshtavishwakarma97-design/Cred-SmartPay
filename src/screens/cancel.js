@@ -2,7 +2,11 @@
 // Cancel Screen (Inbound Requests)
 // ============================================
 
+import { logFunnelEvent } from '../api.js';
+
 export function renderCancel(app, navigate, params = {}) {
+  logFunnelEvent('payment_cancelled');
+  sessionStorage.removeItem('analytics_session_id');
   const screen = document.createElement('div');
   screen.className = 'screen';
   screen.id = 'cancel-screen';

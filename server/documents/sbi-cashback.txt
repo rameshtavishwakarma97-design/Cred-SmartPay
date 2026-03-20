@@ -1,0 +1,58 @@
+{
+  "id": "sbi-cashback",
+  "name": "Cashback",
+  "bank": "SBI Card",
+  "network": "VISA",
+  "last4": "7392",
+  "holder": "SHREYANSH M",
+  "gradient": "card-gradient-2",
+  "color": "#11998e",
+  "tier": "standard",
+  "annualFee": 999,
+  "feeWaiverSpend": 200000,
+  "forexMarkup": 3.5,
+  "rewards": {
+    "online_shopping": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% cashback on ALL online spends (any merchant, no restriction)",
+      "cap": 5000,
+      "capUnit": "per_cycle",
+      "minTxn": 100,
+      "note": "Best card for universal online cashback. Auto-credited in 2 business days post statement."
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% cashback on all offline spends",
+      "cap": 5000,
+      "capUnit": "per_cycle",
+      "minTxn": 100
+    },
+    "fuel": {
+      "type": "surcharge_waiver",
+      "rate": 1,
+      "label": "1% fuel surcharge waiver",
+      "cap": 100,
+      "minTxn": 500
+    }
+  },
+  "excluded": [
+    "fuel",
+    "utility",
+    "insurance",
+    "rent",
+    "wallet_load",
+    "education",
+    "jewellery",
+    "railway",
+    "emi",
+    "quasi_cash",
+    "gaming",
+    "toll",
+    "govt_payments"
+  ],
+  "bestFor": [
+    "online_shopping"
+  ]
+}

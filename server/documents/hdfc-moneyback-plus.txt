@@ -1,0 +1,39 @@
+{
+  "id": "hdfc-moneyback-plus",
+  "name": "HDFC MoneyBack+",
+  "bank": "HDFC Bank",
+  "network": "VISA",
+  "tier": "entry",
+  "annualFee": 500,
+  "feeWaiverSpend": 50000,
+  "bestFor": [
+    "online_shopping"
+  ],
+  "rewards": {
+    "online_shopping": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X CashPoints on Amazon, Flipkart, Myntra, Swiggy, Zomato & Uber",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "emi_department": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X CashPoints on EMI transactions & department stores",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 CashPoint / ₹150 on all other eligible spends",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "1 CashPoint = ₹0.50 for statement credit redemption"
+    }
+  }
+}

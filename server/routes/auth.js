@@ -93,7 +93,7 @@ router.post('/login', (req, res) => {
 
   res.json({
     token,
-    user: { id: user.id, email: user.email, name: user.name }
+    user: { id: user.id, email: user.email, name: user.name, role: user.role }
   });
 });
 
@@ -123,6 +123,57 @@ router.get('/me', authMiddleware, (req, res) => {
   console.log("DEBUG_BACKEND_ME:", JSON.stringify(cards, null, 2));
 
   res.json({ user, cards });
+});
+
+// POST /api/auth/cards — Add a new card to user's wallet
+router.post('/cards', authMiddleware, (req, res) => {
+  const { card_id, last4, nickname } = req.body;
+
+  if (!card_id || !last4) {
+    return res.status(400).json({ error: 'card_id and last4 are required' });
+  }
+
+  const db = getDb();
+  
+  // Verify card exists in industry DB
+  const cardTemplate = db.prepare('SELECT id FROM cards WHERE id = ?').get(card_id);
+  if (!cardTemplate) {
+    return res.status(404).json({ error: 'Card template not found' });
+  }
+
+  try {
+    const result = db.prepare(`
+      INSERT INTO user_cards (user_id, card_id, last4, nickname) 
+      VALUES (?, ?, ?, ?)
+    `).run(req.userId, card_id, last4, nickname || null);
+
+    res.status(201).json({ 
+      id: result.lastInsertRowid,
+      message: 'Card added to wallet successfully' 
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add card: ' + err.message });
+  }
+});
+
+// DELETE /api/auth/cards/:id — Remove a card from user's wallet
+router.delete('/cards/:id', authMiddleware, (req, res) => {
+  const db = getDb();
+  
+  try {
+    const result = db.prepare(`
+      DELETE FROM user_cards 
+      WHERE id = ? AND user_id = ?
+    `).run(req.params.id, req.userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Card not found in your wallet' });
+    }
+
+    res.json({ message: 'Card removed from wallet successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to remove card: ' + err.message });
+  }
 });
 
 export default router;

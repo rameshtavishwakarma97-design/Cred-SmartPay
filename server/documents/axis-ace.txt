@@ -1,0 +1,81 @@
+{
+  "id": "axis-ace",
+  "name": "ACE",
+  "bank": "Axis Bank",
+  "network": "VISA",
+  "last4": "6234",
+  "holder": "SHREYANSH M",
+  "gradient": "card-gradient-5",
+  "color": "#4a0000",
+  "tier": "standard",
+  "annualFee": 499,
+  "feeWaiverSpend": 200000,
+  "rewards": {
+    "utility": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% cashback on electricity, gas, internet, DTH & mobile recharge via Google Pay ONLY",
+      "cap": 500,
+      "capUnit": "combined_per_month",
+      "minTxn": 1,
+      "note": "ONLY when billed via Google Pay. Utility outside GPay earns 1.5%."
+    },
+    "dining": {
+      "type": "cashback",
+      "rate": 4,
+      "label": "4% cashback on Swiggy, Zomato & Ola",
+      "cap": 500,
+      "capUnit": "combined_per_month",
+      "minTxn": 1,
+      "merchants": [
+        "swiggy",
+        "zomato",
+        "ola"
+      ],
+      "note": "Only these 3 merchants. Other dining is 1.5%."
+    },
+    "restaurant_discount": {
+      "type": "discount",
+      "rate": 15,
+      "label": "Up to 15% off at 4,000+ partner restaurants via Axis Bank Dining Delights",
+      "cap": null,
+      "minTxn": 0
+    },
+    "fuel": {
+      "type": "surcharge_waiver",
+      "rate": 1,
+      "label": "1% fuel surcharge waiver (txn ₹400–₹4,000)",
+      "cap": 500,
+      "minTxn": 400,
+      "maxTxn": 4000,
+      "note": "No cashback on fuel principal spend"
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1.5,
+      "label": "1.5% cashback on all other eligible spends (revised from 2% effective Apr 2024)",
+      "cap": null,
+      "minTxn": 1,
+      "note": "Rate reduced from 2% to 1.5% on Apr 20, 2024"
+    }
+  },
+  "loungeAccess": {
+    "domestic": "complimentary",
+    "loungeCondition": "Min ₹50,000 spend in preceding 3 calendar months (from May 2024)"
+  },
+  "excluded": [
+    "fuel_principal",
+    "emi",
+    "wallet_load",
+    "rent",
+    "jewellery",
+    "gold",
+    "insurance",
+    "education",
+    "govt_services"
+  ],
+  "bestFor": [
+    "utility",
+    "dining"
+  ]
+}

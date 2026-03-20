@@ -1,0 +1,45 @@
+{
+  "id": "idfc-power-plus",
+  "name": "IDFC FIRST Power+",
+  "bank": "IDFC FIRST",
+  "network": "VISA",
+  "tier": "entry",
+  "annualFee": 499,
+  "bestFor": [
+    "fuel",
+    "grocery",
+    "utility"
+  ],
+  "rewards": {
+    "hpcl_fuel": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% savings on HPCL petrol stations (4% cashback + 1% surcharge waiver)",
+      "cap": null,
+      "minTxn": 100,
+      "partnerOnly": true
+    },
+    "grocery": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% cashback on grocery spends (supermarkets, grocery apps)",
+      "cap": null,
+      "minTxn": 100
+    },
+    "utility": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% cashback on utility bill payments (electricity, water, gas)",
+      "cap": null,
+      "minTxn": 100
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "10X Reward Points on birthday month; 3X on weekends; 1X regular",
+      "cap": null,
+      "pointValue": 1,
+      "note": "IDFC FIRST Reward Points are among highest value in industry at ₹1/pt"
+    }
+  }
+}

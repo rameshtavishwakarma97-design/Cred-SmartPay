@@ -1,0 +1,64 @@
+{
+  "id": "sbi-prime",
+  "name": "SBI Prime",
+  "bank": "SBI Card",
+  "network": "VISA",
+  "tier": "premium",
+  "annualFee": 2999,
+  "bestFor": [
+    "dining",
+    "grocery",
+    "movies",
+    "dining"
+  ],
+  "rewards": {
+    "dining": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points on dining (restaurants, cafes, food aggregators)",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    },
+    "grocery": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points on grocery & departmental stores",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    },
+    "movies": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points on movies (BookMyShow, PVR, INOX)",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    },
+    "international": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X Reward Points on international spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    },
+    "birthday": {
+      "type": "points",
+      "rate": 20,
+      "label": "20X Reward Points on birthday month spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 Reward Point / ₹100 on all other eligible spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    }
+  }
+}

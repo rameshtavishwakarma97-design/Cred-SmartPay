@@ -25,6 +25,7 @@ const POINT_VALUES = {
 
 // POST /api/recommend — Smart recommendation with cap tracking + offers
 router.post('/', authMiddleware, (req, res) => {
+  const startTime = Date.now();
   const { merchant_id, merchant_name, category, amount, cred_cashback } = req.body;
 
   if (!category || !amount) {
@@ -59,7 +60,7 @@ router.post('/', authMiddleware, (req, res) => {
   const capUsage = db.prepare(`
     SELECT card_id, category, SUM(savings) as used_savings, COUNT(*) as txn_count
     FROM transactions
-    WHERE user_id = ? AND created_at >= ?
+    WHERE user_id = ? AND created_at >= ? AND status = 'completed'
     GROUP BY card_id, category
   `).all(req.userId, monthStart.toISOString());
 
@@ -164,8 +165,15 @@ router.post('/', authMiddleware, (req, res) => {
 
     // CRED cashback
     const credSaving = cred_cashback ? (txnAmount * cred_cashback) / 100 : 0;
+    
+    // Split into Fixed vs Estimated
+    // FIXED: base_reward + constant offers (if any) + CRED cashback
+    // ESTIMATED: Dineout + variable offers
+    const finalFixed = Math.round(cappedSavings + credSaving);
+    const finalEstimated = Math.round(dineoutSavings + bestOfferSavings);
+    const finalTotal = finalFixed + finalEstimated;
+
     if (credSaving > 0) {
-      cardSavings += credSaving;
       breakdown.push({ type: 'cred_cashback', text: `CRED cashback ${cred_cashback}%`, value: credSaving });
     }
 
@@ -180,17 +188,22 @@ router.post('/', authMiddleware, (req, res) => {
         tier: card.tier,
         color: getCardColor(card.bank)
       },
-      savings: Math.round(cappedSavings * 100) / 100,
+      fixedSavings: finalFixed,
+      estimatedSavings: finalEstimated,
+      totalSavings: finalTotal,
+      savings: Math.round(cappedSavings * 100) / 100, // Legacy support
       credCashback: Math.round(credSaving),
-      totalSavings: Math.round(cardSavings * 100) / 100,
       label: rewardRule.label,
       breakdown,
       reasoning: buildReasoning(breakdown)
     };
   });
 
-  // Sort by total savings
-  userResults.sort((a, b) => b.totalSavings - a.totalSavings);
+  // Sort by total savings, tie-break with fixed
+  userResults.sort((a, b) => {
+    if (Math.abs(b.totalSavings - a.totalSavings) < 1) return b.fixedSavings - a.fixedSavings;
+    return b.totalSavings - a.totalSavings;
+  });
 
   // 5. Find industry best cards
   const industryCards = allCards
@@ -203,22 +216,54 @@ router.post('/', authMiddleware, (req, res) => {
       const rule = rewards[category] || rewards.default;
       if (!rule) return null;
 
-      const savings = calculateBaseSavings(rule, txnAmount, c.bank);
+      const result = calculateBaseSavings(rule, txnAmount, c.bank);
+      const credSaving = cred_cashback ? (txnAmount * cred_cashback) / 100 : 0;
+      
+      let dineoutVal = 0;
+      if (rule.dineoutDiscount && category === 'dining') {
+        dineoutVal = (txnAmount * rule.dineoutDiscount) / 100;
+      }
+
+      const finalFixed = Math.round(result.savings + credSaving);
+      const finalEstimated = Math.round(dineoutVal);
+      const finalTotal = finalFixed + finalEstimated;
+
       return {
         card: { id: c.id, name: c.name, bank: c.bank, network: c.network, tier: c.tier, annualFee: c.annual_fee },
-        savings: savings.savings,
+        fixedSavings: finalFixed,
+        estimatedSavings: finalEstimated,
+        totalSavings: finalTotal,
+        savings: result.savings, // Legacy support
         label: rule.label,
-        reasoning: `${c.name} offers ${savings.label}. Annual fee: ₹${c.annual_fee}.`
+        reasoning: `${c.name} offers ${result.label} ${dineoutVal > 0 ? `+ ${rule.dineoutDiscount}% Dineout` : ''}. Annual fee: ₹${c.annual_fee}.`
       };
     })
     .filter(Boolean)
-    .sort((a, b) => b.savings - a.savings);
+    .sort((a, b) => b.totalSavings - a.totalSavings);
 
   const bestIndustry = industryCards[0] || null;
   const bestUser = userResults[0] || null;
-  const industryBeatUser = bestIndustry && bestUser && bestIndustry.savings > bestUser.totalSavings;
+  const industryBeatUser = bestIndustry && bestUser && bestIndustry.totalSavings > bestUser.totalSavings;
+
+  const latencyMs = Date.now() - startTime;
+
+  // Log recommendation impression
+  let impressionId = null;
+  if (bestUser) {
+    try {
+      const result = db.prepare(`
+        INSERT INTO recommendation_impressions (user_id, merchant_id, amount, recommended_card_id, latency_ms)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(req.userId, merchant_id || 'unknown', txnAmount, bestUser.card.id, latencyMs);
+      impressionId = result.lastInsertRowid;
+    } catch (e) {
+      console.error('Failed to log recommendation impression', e);
+    }
+  }
 
   res.json({
+    impressionId,
+    latencyMs,
     userCards: userResults,
     bestUserCard: bestUser,
     industryBest: bestIndustry,
@@ -228,6 +273,27 @@ router.post('/', authMiddleware, (req, res) => {
     category,
     amount: txnAmount
   });
+});
+
+// Update selection for a recommendation
+router.put('/:id/select', authMiddleware, (req, res) => {
+  const { selected_card_id } = req.body;
+  const db = getDb();
+  
+  try {
+    const result = db.prepare(`
+      UPDATE recommendation_impressions 
+      SET selected_card_id = ? 
+      WHERE id = ? AND user_id = ?
+    `).run(selected_card_id, req.params.id, req.userId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Impression not found' });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 function calculateBaseSavings(rule, amount, bank) {

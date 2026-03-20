@@ -2,137 +2,197 @@
 // Home Screen — Card wallet + Quick Actions
 // ============================================
 
-import { clearToken, getUser, getTransactions, getProfile } from '../api.js';
+import { clearToken, getUser, getTransactions, getProfile, logFunnelEvent } from '../api.js';
 
 export function renderHome(app, navigate) {
+  logFunnelEvent('home_viewed');
   const screen = document.createElement('div');
   screen.className = 'screen';
   screen.id = 'home-screen';
 
   screen.innerHTML = `
     <!-- Header -->
-    <div style="padding: 20px 24px 8px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="padding: 24px 24px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-primary);">
       <div>
-        <div style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em;">
-          smart<span style="color: var(--orange-sunshine);">pay</span>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <span style="font-size: 1.1rem; color: var(--text-primary); font-weight: 700; letter-spacing: -0.02em;">explore</span>
+          <span style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; letter-spacing: -0.01em; color: var(--text-primary); text-transform: uppercase;">CRED</span>
+          <span class="new-badge-nudge">SMART PAY ⚡</span>
         </div>
-        <div style="font-size: 0.7rem; color: var(--text-tertiary); margin-top: 2px;">by CRED</div>
+        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 4px; letter-spacing: 0.05em;">Best card recommendations inside 🧠</div>
       </div>
-      <div style="display: flex; gap: 12px; align-items: center;">
-        <div style="width: 36px; height: 36px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer;">🔔</div>
-        <div id="profile-btn" style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--poli-purple), var(--orange-sunshine)); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; cursor: pointer;">${(getUser()?.name || 'SM').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}</div>
-      </div>
-    </div>
-
-    <!-- CRED Score Banner -->
-    <div class="stagger-1" style="margin: 16px 24px; padding: 16px 20px; background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(255,107,44,0.08) 100%); border: 1px solid rgba(139,92,246,0.15); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: space-between;">
-      <div>
-        <div style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 4px;">CRED Score</div>
-        <div style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800;">812</div>
-      </div>
-      <div style="text-align: right;">
-        <div style="font-size: 0.65rem; color: var(--park-green); font-weight: 600;">↑ +12 this month</div>
-        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;">Excellent</div>
+      <div id="profile-btn" style="width: 40px; height: 40px; border-radius: 50%; background: #000000; border: 1.5px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 14c-3.314 0-6 2.686-6 6v1h12v-1c0-3.314-2.686-6-6-6z" />
+          <circle cx="12" cy="8" r="4" />
+          <path d="M7 6.5s1-1.5 5-1.5 5 1.5 5 1.5M7 6.5v1M17 6.5v1" />
+        </svg>
       </div>
     </div>
 
-    <!-- Pending Requests Section (Hidden by default) -->
-    <div id="pending-requests-section" style="display: none;">
-      <div class="section-header stagger-1">
-        <span class="section-title" style="color: var(--orange-sunshine);">Action Required</span>
-      </div>
-      <div class="screen-padding stagger-1" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;" id="pending-requests-container">
-        <!-- Pending items injected here -->
-      </div>
+    <!-- PENDING PAYMENTS Section (Dynamic) -->
+    <div id="pending-requests-section" style="display: none; padding: 0 24px 20px;">
+      <div class="section-group-title" style="margin-bottom: 12px; color: var(--orange-sunshine);">PENDING PAYMENTS</div>
+      <div id="pending-requests-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
     </div>
 
-    <!-- My Cards Section -->
-    <div class="section-header stagger-2">
-      <span class="section-title">My Cards</span>
-      <span class="section-action" id="view-all-cards" style="cursor:pointer">View Details →</span>
-    </div>
-
-    <div class="card-carousel stagger-2" id="card-carousel" style="min-height: 180px;">
-      <div style="padding: 24px; color: var(--text-tertiary); font-size: 0.8rem;">Loading cards...</div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="section-header stagger-3">
-      <span class="section-title">Quick Actions</span>
-    </div>
-
-    <div class="quick-actions stagger-3">
-      <div class="quick-action" id="qa-scan">
-        <div class="qa-icon">📷</div>
-        <div class="qa-label">Scan & Pay</div>
-      </div>
-      <div class="quick-action" id="qa-merchant">
-        <div class="qa-icon" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2);">🏪</div>
-        <div class="qa-label">Recommend</div>
-      </div>
-      <div class="quick-action" id="qa-bills">
-        <div class="qa-icon">📄</div>
-        <div class="qa-label">Bill Pay</div>
-      </div>
-      <div class="quick-action" id="qa-rewards">
-        <div class="qa-icon">🎁</div>
-        <div class="qa-label">Rewards</div>
+    <!-- CARDS Section (Dynamic) -->
+    <div class="section-group stagger-1">
+      <div class="section-group-title">YOUR CARDS</div>
+      <div id="card-carousel" class="card-carousel" style="padding-left: 0; padding-right: 0; margin-left: -24px; margin-right: -24px;">
+        <div style="padding: 0 24px; color: var(--text-tertiary); font-size: 0.8rem;">Loading cards...</div>
       </div>
     </div>
 
-    <!-- Recent Transactions -->
-    <div class="section-header stagger-4">
-      <span class="section-title">Recent Activity</span>
-      <span class="section-action" id="view-all-txns">View All →</span>
-    </div>
-
-    <div class="screen-padding stagger-4" style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 24px;" id="recent-activity-container">
-      <div style="padding: 16px; text-align: center; color: var(--text-tertiary); font-size: 0.8rem;">Loading activity...</div>
-    </div>
-
-    <!-- Smart Pay Promo -->
-    <div class="stagger-5 screen-padding" style="padding-bottom: 32px;">
-      <div style="padding: 20px; background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(132,204,22,0.06) 100%); border: 1px solid rgba(16,185,129,0.15); border-radius: var(--radius-xl);">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="font-size: 1.2rem;">🧠</span>
-          <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.85rem;">Smart Pay Intelligence</span>
+    <!-- POPULAR Section -->
+    <div class="section-group stagger-1">
+      <div class="section-group-title">POPULAR</div>
+      <div class="grid-4">
+        <div class="icon-item" id="qa-scan">
+          <div class="circular-icon">📷</div>
+          <div class="icon-label">SCAN<br>& PAY</div>
         </div>
-        <div style="font-size: 0.75rem; color: var(--text-secondary); line-height: 1.6;">
-          Pay any merchant and our AI recommends the best card from your wallet for maximum savings. We also suggest the best card in the industry if there's a better option.
+        <div class="icon-item">
+          <div class="circular-icon">👤</div>
+          <div class="icon-label">PAY<br>CONTACTS</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">🏦</div>
+          <div class="icon-label">BANK<br>ACCOUNTS</div>
+        </div>
+        <div class="icon-item nudge-highlight" id="nav-smartpay">
+          <div class="circular-icon" style="background: radial-gradient(circle at center, #2A1A2A 0%, #1A1A1A 100%);">🧠</div>
+          <div class="icon-label">SmartPay</div>
         </div>
       </div>
     </div>
 
-    <!-- Bottom Nav -->
-    <div class="bottom-nav">
-      <button class="nav-item active" id="nav-home">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">Home</span>
-      </button>
-      <button class="nav-item" id="nav-pay"><span class="nav-icon">🧠</span><span class="nav-label">Recommend</span></button>
-      <button class="nav-item" id="nav-history">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">History</span>
-      </button>
-      <button class="nav-item" id="nav-rewards">
-        <span class="nav-icon">🎯</span>
-        <span class="nav-label">Rewards</span>
-      </button>
+    <!-- Banner -->
+    <div class="mint-card stagger-2">
+      <div class="mint-info">
+        <div class="mint-icon">💎</div>
+        <div>
+          <div class="mint-text-title">CRED mint</div>
+          <div class="mint-text-desc">invest and earn up to 9% p.a.</div>
+        </div>
+      </div>
+      <div style="color: var(--text-tertiary);">›</div>
+    </div>
+
+    <!-- MONEY MATTERS Section -->
+    <div class="section-group stagger-3">
+      <div class="section-group-title">MONEY MATTERS</div>
+      <div class="grid-4">
+        <div class="icon-item">
+          <div class="circular-icon">📊</div>
+          <div class="icon-label">CREDIT<br>SCORE</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">📈</div>
+          <div class="icon-label">INVEST</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">💰</div>
+          <div class="icon-label">CASH</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">🧪</div>
+          <div class="icon-label">MINT</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILLS Section -->
+    <div class="section-group stagger-4">
+      <div class="section-group-title">BILLS</div>
+      <div class="grid-4">
+        <div class="icon-item">
+          <div class="circular-icon">💡</div>
+          <div class="icon-label">ELECTRICITY</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">📱</div>
+          <div class="icon-label">MOBILE</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">📡</div>
+          <div class="icon-label">DTH</div>
+        </div>
+        <div class="icon-item">
+          <div class="circular-icon">➕</div>
+          <div class="icon-label">VIEW ALL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY Section (Dynamic) -->
+    <div class="section-group stagger-5" style="margin-top: 24px;">
+      <div class="section-group-title">RECENT ACTIVITY</div>
+      <div id="recent-activity-container" style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+        <div style="padding: 12px; color: var(--text-tertiary); font-size: 0.8rem;">Loading activity...</div>
+      </div>
     </div>
   `;
 
   app.innerHTML = '';
   app.appendChild(screen);
 
+  // Nudge Highlight Animation (first 2 seconds)
+  const smartPayNudge = screen.querySelector('#nav-smartpay');
+  if (smartPayNudge) {
+    setTimeout(() => {
+      smartPayNudge.classList.add('active');
+      setTimeout(() => {
+        smartPayNudge.classList.remove('active');
+        // Add a permanent subtle glow instead? No, user just said 1-2 seconds.
+      }, 2000);
+    }, 500);
+  }
+
   // Event listeners
-  document.getElementById('qa-merchant')?.addEventListener('click', () => navigate('merchants'));
   document.getElementById('qa-scan')?.addEventListener('click', () => navigate('merchants'));
-  document.getElementById('nav-pay')?.addEventListener('click', () => navigate('merchants'));
-  document.getElementById('nav-history')?.addEventListener('click', () => navigate('history'));
-  document.getElementById('view-all-txns')?.addEventListener('click', () => navigate('history'));
-  document.getElementById('view-all-cards')?.addEventListener('click', () => navigate('cards'));
+  document.getElementById('nav-smartpay')?.addEventListener('click', () => navigate('merchants'));
   document.getElementById('profile-btn')?.addEventListener('click', () => {
-    if (confirm('Logout?')) { clearToken(); navigate('login'); }
+    // Custom Logout Modal
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.style.zIndex = '1000';
+    
+    modalOverlay.innerHTML = `
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Logout</h2>
+        </div>
+        <div class="modal-body">
+          <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Are you sure you want to log out of your CRED Smart Pay account?</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn modal-btn-secondary" id="logout-cancel">Cancel</button>
+          <button class="modal-btn modal-btn-danger" id="logout-confirm">Logout</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modalOverlay);
+    
+    document.getElementById('logout-cancel')?.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      setTimeout(() => modalOverlay.remove(), 300);
+    });
+    
+    document.getElementById('logout-confirm')?.addEventListener('click', () => {
+      modalOverlay.classList.remove('active');
+      setTimeout(() => {
+        modalOverlay.remove();
+        clearToken();
+        navigate('login');
+      }, 300);
+    });
+    
+    // Trigger entry animation
+    requestAnimationFrame(() => {
+      modalOverlay.classList.add('active');
+    });
   });
 
   // Fetch pending requests

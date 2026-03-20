@@ -10,12 +10,14 @@ import transactionRoutes from './routes/transactions.js';
 import offerRoutes from './routes/offers.js';
 import recommendRoutes from './routes/recommend.js';
 import cardRoutes from './routes/cards.js';
+import analyticsRoutes from './routes/analytics.js';
+import bcrypt from 'bcryptjs';
 
 // Dynamically import card data (ES module from src/)
 import { userCards, industryCards } from '../src/data/cards.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 
 // Middleware
 app.use(cors({
@@ -94,12 +96,25 @@ try {
   console.log(`  ℹ️  Offers already seeded`);
 }
 
+// Seed admin user
+try {
+  const adminPwdHash = bcrypt.hashSync('admin123', 10);
+  db.prepare(`
+    INSERT OR REPLACE INTO users (email, name, password_hash, role)
+    VALUES (?, ?, ?, ?)
+  `).run('admin@cred.club', 'System Admin', adminPwdHash, 'admin');
+  console.log(`  ✅ Seeded/Updated admin user`);
+} catch (e) {
+  console.error('Failed to seed admin user:', e.message);
+}
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/recommend', recommendRoutes);
 app.use('/api/cards', cardRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -136,3 +151,4 @@ app.listen(PORT, () => {
     }
   }, 60 * 1000); // Check every minute
 });
+ 

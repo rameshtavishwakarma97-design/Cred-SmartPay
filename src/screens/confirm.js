@@ -91,7 +91,7 @@ export function renderConfirm(app, navigate, params) {
   setupSwipeToPay(navigate, params, merchant);
 
   document.getElementById('confirm-back')?.addEventListener('click', () => {
-    navigate('recommendation', { merchantId: merchant.id, amount });
+    navigate('recommendation', { merchantId: merchant.id, amount, transactionId: params.transactionId });
   });
 }
 

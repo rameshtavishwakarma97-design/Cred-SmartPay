@@ -3,13 +3,18 @@
 // ============================================
 
 import { merchants } from '../data/merchants.js';
-import { updateTransactionStatus } from '../api.js';
+import { updateTransactionStatus, logFunnelEvent, getSmartRecommendation } from '../api.js';
+import { showModal } from '../components/modal.js';
 
 export function renderTransaction(app, navigate, params) {
+  logFunnelEvent('amount_page_viewed', { merchantId: params.merchantId, amount: params.amount });
   const merchant = merchants.find(m => m.id === params.merchantId);
   if (!merchant) { navigate('merchants'); return; }
 
   let amount = params.amount ? params.amount.toString() : '';
+  let paymentMethod = 'smartpay';
+  if (params.forceUpi) paymentMethod = 'upi';
+  if (params.forceSmartPay) paymentMethod = 'smartpay';
 
   const screen = document.createElement('div');
   screen.className = 'screen';
@@ -68,8 +73,22 @@ export function renderTransaction(app, navigate, params) {
       </div>
     `}
 
+    <!-- Payment Method Selector -->
+    <div class="stagger-3" style="margin: 0 24px 20px;">
+      <div class="payment-selector">
+        <button class="selector-item ${paymentMethod === 'smartpay' ? 'active' : ''} ${params.forceUpi ? 'disabled' : ''}" id="sel-smartpay" ${params.forceUpi ? 'disabled' : ''}>
+          <span class="sel-icon">🧠</span>
+          <span class="sel-text">Smart Pay</span>
+        </button>
+        <button class="selector-item ${paymentMethod === 'upi' ? 'active' : ''} ${params.forceSmartPay ? 'disabled' : ''}" id="sel-upi" ${params.forceSmartPay ? 'disabled' : ''}>
+          <span class="sel-icon">📱</span>
+          <span class="sel-text">UPI</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Smart Pay Button -->
-    <div style="padding: 20px 24px; margin-top: 12px;">
+    <div style="padding: 0 24px 32px; margin-top: 12px;">
       <button class="neo-btn neo-btn-accent neo-btn-full" id="smart-pay-btn" ${amount ? '' : 'disabled'}>
         🧠 Smart Pay — Find Best Card
       </button>
@@ -117,30 +136,90 @@ export function renderTransaction(app, navigate, params) {
     setTimeout(() => { key.style.background = 'transparent'; }, 100);
   });
 
+  // Selector logic
+  const selSmartPay = document.getElementById('sel-smartpay');
+  const selUpi = document.getElementById('sel-upi');
+
+  function updateMethod(method) {
+    if (params.forceUpi && method === 'smartpay') return;
+    if (params.forceSmartPay && method === 'upi') return;
+    paymentMethod = method;
+    if (method === 'smartpay') {
+      selSmartPay.classList.add('active');
+      selUpi.classList.remove('active');
+      payBtn.textContent = '🧠 Smart Pay — Find Best Card';
+      payBtn.className = 'neo-btn neo-btn-accent neo-btn-full';
+    } else {
+      selUpi.classList.add('active');
+      selSmartPay.classList.remove('active');
+      payBtn.textContent = 'Pay via UPI';
+      payBtn.className = 'neo-btn neo-btn-primary neo-btn-full';
+    }
+  }
+
+  // Initial UI state setup
+  updateMethod(paymentMethod);
+
+  selSmartPay?.addEventListener('click', () => updateMethod('smartpay'));
+  selUpi?.addEventListener('click', () => updateMethod('upi'));
+
   // Smart Pay button
-  payBtn?.addEventListener('click', () => {
+  payBtn?.addEventListener('click', async () => {
     if (!amount || parseFloat(amount) <= 0) return;
-    payBtn.style.transform = 'translate(2px, 2px)';
-    setTimeout(() => {
+    payBtn.innerHTML = `<span>⏳</span> Processing...`;
+    
+    let potentialSavings = 0;
+    try {
+      const reco = await getSmartRecommendation(merchant.id, merchant.name, merchant.category, parseFloat(amount));
+      if (reco && reco.bestUserCard) {
+        potentialSavings = reco.bestUserCard.totalSavings || 0;
+      }
+      console.log('DEBUG: Potential savings found:', potentialSavings);
+    } catch (e) {
+      console.warn('Failed to pre-fetch potential savings:', e.message);
+    }
+
+    if (paymentMethod === 'smartpay') {
       navigate('recommendation', {
         transactionId: params.transactionId,
         merchantId: merchant.id,
-        amount: parseFloat(amount)
+        amount: parseFloat(amount),
+        potentialSavings
       });
-    }, 200);
+    } else {
+      navigate('upi_pin', {
+        transactionId: params.transactionId,
+        merchantId: merchant.id,
+        amount: parseFloat(amount),
+        potentialSavings
+      });
+    }
   });
 
   // Back
   document.getElementById('txn-back')?.addEventListener('click', async () => {
     if (params.transactionId) {
       // Merchant-initiated flow: ask before cancelling
-      const confirmed = confirm(`Cancel payment to ${merchant.name}?\n\nThe merchant's payment request will be dismissed.`);
-      if (!confirmed) return; // User chose to stay
-      try {
-        await updateTransactionStatus(params.transactionId, 'cancelled');
-      } catch (e) {
-        console.error('Failed to cancel txn:', e);
+      const result = await showModal({
+        title: 'Cancel Payment?',
+        desc: `Are you sure you want to cancel the payment to ${merchant.name}? You can dismiss it entirely or pay later from your home screen.`,
+        icon: '⚠️',
+        confirmText: 'Yes, Cancel',
+        neutralText: 'Pay Later',
+        cancelText: null,
+        danger: true
+      });
+      
+      if (result === 'cancel') return; // User chose to stay
+      
+      if (result === 'confirm') {
+        try {
+          await updateTransactionStatus(params.transactionId, 'cancelled');
+        } catch (e) {
+          console.error('Failed to cancel txn:', e);
+        }
       }
+      // If 'neutral' (Pay Later), we just navigate home without changing status (remains pending)
     }
     navigate('home');
   });

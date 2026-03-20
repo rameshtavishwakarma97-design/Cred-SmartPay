@@ -2,7 +2,7 @@
 // API Utility — fetch with JWT token
 // ============================================
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = 'http://localhost:3005/api';
 
 export function getToken() {
   return localStorage.getItem('smartpay_token');
@@ -46,7 +46,25 @@ export async function api(endpoint, options = {}) {
   }
 
   const res = await fetch(`${API_BASE}${endpoint}`, config);
-  const data = await res.json();
+  
+  // Try to parse JSON, if it fails and res is not OK, throw status error
+  let data;
+  const contentType = res.headers.get('content-type');
+  
+  if (contentType && contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    if (!res.ok) {
+      throw new Error(`Server Error (${res.status}): ${res.status === 404 ? 'Endpoint not found. Is the server restarted?' : 'Internal Server Error'}`);
+    }
+    // If OK but not JSON (unexpected)
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error('Server returned non-JSON response');
+    }
+  }
 
   if (!res.ok) {
     if (res.status === 401) {
@@ -88,6 +106,7 @@ export async function getProfile() {
 
 // Transaction helpers
 export async function recordTransaction(txn) {
+  console.log('API: Recording transaction:', txn);
   return api('/transactions', { method: 'POST', body: txn });
 }
 
@@ -136,5 +155,45 @@ export async function createPendingTransaction(data) {
 }
 
 export async function updateTransactionStatus(id, status, extraData = {}) {
+  console.log('API: Updating transaction status:', { id, status, ...extraData });
   return api(`/transactions/${id}/status`, { method: 'PUT', body: { status, ...extraData } });
+}
+
+// Analytics helpers
+export async function logFunnelEvent(eventName, metadata = {}) {
+  const user = getUser();
+  const sessionId = sessionStorage.getItem('analytics_session_id') || 'anon-' + Date.now();
+  if (!sessionStorage.getItem('analytics_session_id')) {
+    sessionStorage.setItem('analytics_session_id', sessionId);
+  }
+
+  return api('/analytics/log', {
+    method: 'POST',
+    body: {
+      session_id: sessionId,
+      user_id: user ? user.id : null,
+      event_name: eventName,
+      metadata
+    }
+  }).catch(err => console.warn('Analytics log failed', err));
+}
+
+export async function updateRecommendationSelection(impressionId, selectedCardId) {
+  if (!impressionId) return;
+  return api(`/recommend/${impressionId}/select`, {
+    method: 'PUT',
+    body: { selected_card_id: selectedCardId }
+  }).catch(err => console.warn('Selection log failed', err));
+}
+
+export async function getAnalyticsStats() {
+  return api('/analytics/stats');
+}
+
+export async function addUserCard(cardData) {
+  return api('/auth/cards', { method: 'POST', body: cardData });
+}
+
+export async function deleteUserCard(userCardId) {
+  return api(`/auth/cards/${userCardId}`, { method: 'DELETE' });
 }

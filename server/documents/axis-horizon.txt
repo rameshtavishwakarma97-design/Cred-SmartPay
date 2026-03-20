@@ -1,0 +1,31 @@
+{
+  "id": "axis-horizon",
+  "name": "Axis Horizon",
+  "bank": "Axis Bank",
+  "network": "VISA",
+  "tier": "premium",
+  "annualFee": 3000,
+  "loungeDomestic": 8,
+  "loungeInternational": 4,
+  "bestFor": [
+    "travel"
+  ],
+  "rewards": {
+    "travel": {
+      "type": "points",
+      "rate": 3,
+      "label": "3 EDGE Miles per ₹100 on flights, hotels, bus bookings",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 1
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 EDGE Mile per ₹100 on all other spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 1
+    }
+  }
+}

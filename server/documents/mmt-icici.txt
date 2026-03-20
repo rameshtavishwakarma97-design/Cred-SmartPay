@@ -1,0 +1,42 @@
+{
+  "id": "mmt-icici",
+  "name": "MakeMyTrip ICICI",
+  "bank": "ICICI Bank",
+  "network": "VISA",
+  "tier": "standard",
+  "annualFee": 999,
+  "bestFor": [
+    "travel"
+  ],
+  "rewards": {
+    "mmt_flights": {
+      "type": "cashback",
+      "rate": 8,
+      "label": "8% value back as MMT Cash on domestic flights via MakeMyTrip",
+      "cap": null,
+      "partnerOnly": true,
+      "note": "MMT Cash redeemable on future bookings on MMT"
+    },
+    "mmt_hotels": {
+      "type": "cashback",
+      "rate": 10,
+      "label": "10% value back as MMT Cash on hotel bookings via MakeMyTrip",
+      "cap": null,
+      "partnerOnly": true
+    },
+    "mmt_holidays": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% value back on holiday packages via MakeMyTrip",
+      "cap": null,
+      "partnerOnly": true
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% as myRewardz points on all other spends",
+      "cap": null,
+      "minTxn": 1
+    }
+  }
+}

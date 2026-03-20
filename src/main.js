@@ -3,7 +3,7 @@
 // ============================================
 
 import './style.css';
-import { isLoggedIn, createPendingTransaction } from './api.js';
+import { isLoggedIn, getUser, createPendingTransaction } from './api.js';
 import { renderLogin } from './screens/login.js';
 import { renderHome } from './screens/home.js';
 import { renderMerchants } from './screens/merchants.js';
@@ -14,8 +14,21 @@ import { renderSuccess } from './screens/success.js';
 import { renderHistory } from './screens/history.js';
 import { renderCancel } from './screens/cancel.js';
 import { renderCards } from './screens/cards.js';
+import { renderUpiPin } from './screens/upi_pin.js';
+import { renderMerchantSimulator } from './screens/merchant_simulator.js';
+import { renderDashboard } from './screens/dashboard.js';
+import { merchants } from './data/merchants.js';
 
 const app = document.getElementById('app');
+
+// Create layout structure
+app.innerHTML = `
+  <div id="screen-container" style="min-height: 100vh;"></div>
+  <div id="global-nav"></div>
+`;
+
+const screenContainer = document.getElementById('screen-container');
+const globalNav = document.getElementById('global-nav');
 
 // Global state
 let currentScreen = 'home';
@@ -33,36 +46,112 @@ const screens = {
   history: renderHistory,
   cancel: renderCancel,
   cards: renderCards,
+  upi_pin: renderUpiPin,
+  merchant_simulator: renderMerchantSimulator,
+  dashboard: renderDashboard,
 };
 
 // Protected screens (require login)
 const publicScreens = ['login'];
 
 // Navigation function
-function navigate(screen, params = {}) {
-  // Auth guard
-  if (!publicScreens.includes(screen) && !isLoggedIn()) {
-    screen = 'login';
-    params = {};
+function sanitizeScreen(screen) {
+  const user = getUser();
+  const loggedIn = isLoggedIn();
+  
+  if (!publicScreens.includes(screen) && !loggedIn) {
+    return 'login';
   }
+  
+  if (loggedIn && user) {
+    if (user.role === 'admin') {
+      if (screen !== 'dashboard' && screen !== 'login') {
+        return 'dashboard';
+      }
+    } else {
+      if (screen === 'dashboard') {
+        return 'home';
+      }
+    }
+  }
+  return screen;
+}
 
-  currentScreen = screen;
+// Navigation function
+function navigate(screen, params = {}) {
+  currentScreen = sanitizeScreen(screen);
   screenParams = params;
 
-  const hash = `#${screen}${params.merchantId ? `/${params.merchantId}` : ''}`;
-  history.pushState({ screen, params }, '', hash);
+  const hash = `#${currentScreen}${params.merchantId ? `/${params.merchantId}` : ''}`;
+  history.pushState({ screen: currentScreen, params }, '', hash);
 
   render();
 }
 
+// Render Footer
+function renderFooter() {
+  if (currentScreen === 'login' || currentScreen === 'upi_pin' || currentScreen === 'success' || currentScreen === 'merchant_simulator' || currentScreen === 'dashboard') {
+    globalNav.innerHTML = '';
+    return;
+  }
+
+  globalNav.innerHTML = `
+    <div class="bottom-nav">
+      <button class="nav-item ${currentScreen === 'home' ? 'active' : ''}" id="nav-home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">HOME</span>
+      </button>
+      <button class="nav-item ${currentScreen === 'cards' ? 'active' : ''}" id="nav-cards">
+        <span class="nav-icon">💳</span>
+        <span class="nav-label">CARDS</span>
+      </button>
+      <button class="nav-item-center" id="nav-upi">
+        <span class="nav-icon">💸</span>
+        <span class="nav-label">UPI</span>
+      </button>
+      <button class="nav-item ${currentScreen === 'history' ? 'active' : ''}" id="nav-history">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">HISTORY</span>
+      </button>
+      <button class="nav-item" id="nav-more">
+        <span class="nav-icon">⠿</span>
+        <span class="nav-label">MORE</span>
+      </button>
+    </div>
+  `;
+
+  // Add listeners
+  document.getElementById('nav-home')?.addEventListener('click', () => navigate('home'));
+  document.getElementById('nav-cards')?.addEventListener('click', () => navigate('cards'));
+  document.getElementById('nav-upi')?.addEventListener('click', () => {
+    const randomMerchant = merchants[Math.floor(Math.random() * merchants.length)];
+    navigate('transaction', { merchantId: randomMerchant.id, forceUpi: true });
+  });
+  document.getElementById('nav-history')?.addEventListener('click', () => navigate('history'));
+  
+  // Only show MORE (Dashboard) for admins in the footer if at all
+  const user = getUser();
+  if (user?.role === 'admin') {
+    document.getElementById('nav-more')?.addEventListener('click', () => navigate('dashboard'));
+  } else {
+    // Hide or disable for non-admins
+    const moreBtn = document.getElementById('nav-more');
+    if (moreBtn) moreBtn.style.opacity = '0.3';
+  }
+}
+
 // Render current screen
 function render() {
+  currentScreen = sanitizeScreen(currentScreen);
   const renderFn = screens[currentScreen];
+  
   if (renderFn) {
-    renderFn(app, navigate, screenParams);
+    renderFn(screenContainer, navigate, screenParams);
   } else {
-    renderHome(app, navigate);
+    renderHome(screenContainer, navigate);
   }
+  
+  renderFooter();
 }
 
 // Handle browser back/forward
@@ -80,10 +169,25 @@ window.addEventListener('popstate', (e) => {
 // Initial render — check auth and check URL params for inbound requests
 async function initApp() {
   const urlParams = new URLSearchParams(window.location.search);
+  const simulator = urlParams.get('simulator');
   const inboundMerchant = urlParams.get('merchant');
   const inboundCategory = urlParams.get('category');
   const inboundAmount = urlParams.get('amount');
   const inboundOrderId = urlParams.get('orderId');
+  const autoOpen = urlParams.get('autoOpen') !== 'false';
+
+  if (simulator === 'true') {
+    currentScreen = 'merchant_simulator';
+    render();
+    return;
+  }
+
+  const dashboard = urlParams.get('dashboard');
+  if (dashboard === 'true') {
+    currentScreen = 'dashboard';
+    render();
+    return;
+  }
 
   if (inboundMerchant && inboundCategory && inboundAmount) {
     const pendingTxnParams = {
@@ -105,10 +209,16 @@ async function initApp() {
           amount: parseFloat(inboundAmount)
         });
         
-        currentScreen = 'transaction';
-        screenParams = { ...pendingTxnParams, transactionId: res.id };
-        const hash = `#transaction/${inboundMerchant}`;
-        history.replaceState({ screen: 'transaction', params: screenParams }, '', hash);
+        if (autoOpen) {
+          currentScreen = 'transaction';
+          screenParams = { ...pendingTxnParams, transactionId: res.id };
+          const hash = `#transaction/${inboundMerchant}`;
+          history.replaceState({ screen: 'transaction', params: screenParams }, '', hash);
+        } else {
+          currentScreen = 'home';
+          screenParams = {};
+          history.replaceState({ screen: 'home', params: {} }, '', '#home');
+        }
         render();
         return;
       } catch (e) {

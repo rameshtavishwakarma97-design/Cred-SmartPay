@@ -1,0 +1,66 @@
+{
+  "id": "hdfc-regalia-gold",
+  "name": "HDFC Regalia Gold",
+  "bank": "HDFC Bank",
+  "network": "VISA",
+  "tier": "premium",
+  "annualFee": 2500,
+  "feeWaiverSpend": 400000,
+  "loungeDomestic": 12,
+  "loungeInternational": 6,
+  "bestFor": [
+    "online_shopping",
+    "general",
+    "travel"
+  ],
+  "rewards": {
+    "lifestyle_partners": {
+      "type": "points",
+      "rate": 5,
+      "label": "5X Reward Points (20 RP/₹150) on Nykaa, Myntra, Marks & Spencer, Reliance Digital",
+      "cap": 5000,
+      "capUnit": "per_month",
+      "minTxn": 150,
+      "pointValue": 0.65,
+      "partnerOnly": true,
+      "note": "1 RP = ₹0.65 on Gold Catalogue; ₹0.50 on SmartBuy flights"
+    },
+    "smartbuy": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X on SmartBuy hotel bookings; 5X on flights, buses",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "default": {
+      "type": "points",
+      "rate": 4,
+      "label": "4 Reward Points / ₹150 on all retail spends (≈1.73% value at Gold Catalogue)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.65
+    },
+    "dineout": {
+      "type": "discount",
+      "rate": 20,
+      "label": "Up to 20% off at Swiggy Dineout partner restaurants",
+      "cap": null,
+      "minTxn": 0
+    }
+  },
+  "quarterlyMilestone": {
+    "spend": 150000,
+    "reward": "₹1,500 vouchers from Marriott / Myntra / M&S / Reliance Digital"
+  },
+  "annualMilestone": [
+    {
+      "spend": 500000,
+      "reward": "₹5,000 flight vouchers"
+    },
+    {
+      "spend": 750000,
+      "reward": "Additional ₹5,000 flight vouchers"
+    }
+  ]
+}

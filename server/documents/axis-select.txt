@@ -1,0 +1,44 @@
+{
+  "id": "axis-select",
+  "name": "Axis SELECT",
+  "bank": "Axis Bank",
+  "network": "VISA",
+  "tier": "premium",
+  "annualFee": 3000,
+  "bestFor": [
+    "online_shopping",
+    "movies",
+    "dining"
+  ],
+  "rewards": {
+    "online_shopping": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X EDGE Reward Points on online shopping",
+      "cap": null,
+      "minTxn": 1,
+      "pointValue": 0.2
+    },
+    "movies": {
+      "type": "discount",
+      "rate": 50,
+      "label": "Buy 1 Get 1 Free on BookMyShow (up to ₹300 off per ticket, 2 bookings/month)",
+      "cap": 600,
+      "note": "Applies to movies on weekends"
+    },
+    "premium_dining": {
+      "type": "discount",
+      "rate": 20,
+      "label": "Up to 20% off at select premium restaurants",
+      "cap": null
+    },
+    "default": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X EDGE Reward Points on all other retail spends",
+      "cap": null,
+      "minTxn": 1,
+      "pointValue": 0.2
+    }
+  }
+}

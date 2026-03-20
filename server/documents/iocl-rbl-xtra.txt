@@ -1,0 +1,30 @@
+{
+  "id": "iocl-rbl-xtra",
+  "name": "IndianOil RBL XTRA",
+  "bank": "RBL Bank",
+  "network": "Mastercard",
+  "tier": "standard",
+  "annualFee": 1500,
+  "bestFor": [
+    "fuel"
+  ],
+  "rewards": {
+    "iocl_fuel": {
+      "type": "cashback",
+      "rate": 8.5,
+      "label": "8.5% value back at IndianOil outlets (4% turbopoints + 1% surcharge waiver + 2.5% bank cashback + 1% discount)",
+      "cap": null,
+      "minTxn": 100,
+      "partnerOnly": true,
+      "note": "Breakdown: 4% Turbopoints + 2.5% cashback + 1% surcharge waiver + 1% IndianOil loyalty discount"
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 RBL Reward Point / ₹100 on all other retail spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    }
+  }
+}

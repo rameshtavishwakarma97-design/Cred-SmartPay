@@ -1,0 +1,37 @@
+{
+  "id": "easydiner-indusind",
+  "name": "EazyDiner IndusInd",
+  "bank": "IndusInd Bank",
+  "network": "Mastercard",
+  "tier": "premium",
+  "annualFee": 2999,
+  "bestFor": [
+    "dining"
+  ],
+  "rewards": {
+    "easydiner": {
+      "type": "discount",
+      "rate": 25,
+      "label": "Up to 25% off at 22,000+ EazyDiner Prime restaurants — complimentary EazyDiner Prime membership",
+      "cap": null,
+      "minTxn": 0,
+      "note": "EazyDiner Prime worth ₹1,499/yr included free"
+    },
+    "reward_points": {
+      "type": "points",
+      "rate": 10,
+      "label": "10 Reward Points per ₹100 on dining spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.5
+    },
+    "default": {
+      "type": "points",
+      "rate": 2,
+      "label": "2 Reward Points per ₹100 on all other spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.5
+    }
+  }
+}

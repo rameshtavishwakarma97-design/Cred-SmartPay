@@ -1,0 +1,44 @@
+{
+  "id": "icici-hpcl-saver",
+  "name": "ICICI HPCL Super Saver",
+  "bank": "ICICI Bank",
+  "network": "VISA",
+  "tier": "entry",
+  "annualFee": 500,
+  "bestFor": [
+    "fuel",
+    "grocery"
+  ],
+  "rewards": {
+    "hpcl_fuel": {
+      "type": "cashback",
+      "rate": 4,
+      "label": "4% Reward Points + 1% surcharge waiver = 5% effective value at HPCL stations",
+      "cap": null,
+      "minTxn": 100,
+      "partnerOnly": true
+    },
+    "grocery": {
+      "type": "cashback",
+      "rate": 2,
+      "label": "2% Reward Points on grocery & departmental store spends",
+      "cap": null,
+      "minTxn": 100
+    },
+    "utility": {
+      "type": "cashback",
+      "rate": 2,
+      "label": "2% Reward Points on utility bill payments",
+      "cap": null,
+      "minTxn": 100
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 ICICI Reward Point per ₹100 on all other eligible spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 0.25
+    }
+  }
+}

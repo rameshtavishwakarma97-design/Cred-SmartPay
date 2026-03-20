@@ -10,7 +10,7 @@ const router = Router();
 
 // POST /api/transactions — Record a payment
 router.post('/', authMiddleware, (req, res) => {
-  const { card_id, merchant_id, merchant_name, category, amount, savings, offer_id } = req.body;
+  const { card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id } = req.body;
 
   if (!card_id || !merchant_id || !category || !amount) {
     return res.status(400).json({ error: 'card_id, merchant_id, category, amount required' });
@@ -19,9 +19,9 @@ router.post('/', authMiddleware, (req, res) => {
   const db = getDb();
 
   const result = db.prepare(`
-    INSERT INTO transactions (user_id, card_id, merchant_id, merchant_name, category, amount, savings, offer_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(req.userId, card_id, merchant_id, merchant_name || '', category, amount, savings || 0, offer_id || null);
+    INSERT INTO transactions (user_id, card_id, merchant_id, merchant_name, category, amount, savings, potential_savings, offer_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(req.userId, card_id, merchant_id, merchant_name || '', category, amount, savings || 0, potential_savings || 0, offer_id || null);
 
   // Record offer usage if applicable
   if (offer_id) {
@@ -58,7 +58,7 @@ router.post('/pending', authMiddleware, (req, res) => {
 
 // PUT /api/transactions/:id/status — Complete or cancel a transaction
 router.put('/:id/status', authMiddleware, (req, res) => {
-  const { status, card_id, savings, offer_id } = req.body;
+  const { status, card_id, savings, potential_savings, offer_id } = req.body;
   const db = getDb();
   
   if (!['completed', 'cancelled'].includes(status)) {
@@ -73,9 +73,9 @@ router.put('/:id/status', authMiddleware, (req, res) => {
 
   db.prepare(`
     UPDATE transactions 
-    SET status = ?, card_id = COALESCE(?, card_id), savings = COALESCE(?, savings), offer_id = COALESCE(?, offer_id)
+    SET status = ?, card_id = COALESCE(?, card_id), savings = COALESCE(?, savings), potential_savings = COALESCE(?, potential_savings), offer_id = COALESCE(?, offer_id)
     WHERE id = ?
-  `).run(status, card_id || null, savings || 0, offer_id || null, req.params.id);
+  `).run(status, card_id || null, savings ?? null, potential_savings ?? null, offer_id || null, req.params.id);
 
   if (offer_id && status === 'completed') {
     db.prepare('INSERT INTO offer_usage (user_id, offer_id, transaction_id) VALUES (?, ?, ?)')
@@ -104,8 +104,17 @@ router.get('/', authMiddleware, (req, res) => {
     params.push(card_id);
   }
   if (status) {
-    where += ' AND status = ?';
-    params.push(status);
+    let statuses = [];
+    if (typeof status === 'string') {
+      statuses = status.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (Array.isArray(status)) {
+      statuses = status.flatMap(s => typeof s === 'string' ? s.split(',') : s).map(s => String(s).trim()).filter(Boolean);
+    }
+    
+    if (statuses.length > 0) {
+      where += ` AND status IN (${statuses.map(() => '?').join(', ')})`;
+      params.push(...statuses);
+    }
   }
 
   const total = db.prepare(`SELECT COUNT(*) as count FROM transactions ${where}`).get(...params);
@@ -135,7 +144,8 @@ router.get('/stats', authMiddleware, (req, res) => {
     SELECT
       COUNT(*) as transaction_count,
       COALESCE(SUM(amount), 0) as total_spent,
-      COALESCE(SUM(savings), 0) as total_savings
+      COALESCE(SUM(savings), 0) as total_savings,
+      COALESCE(SUM(potential_savings), 0) as total_potential
     FROM transactions
     WHERE user_id = ? AND created_at >= ? AND status = 'completed'
   `).get(req.userId, monthStart.toISOString());
@@ -146,7 +156,8 @@ router.get('/stats', authMiddleware, (req, res) => {
       category,
       COUNT(*) as count,
       SUM(amount) as total,
-      SUM(savings) as savings
+      SUM(savings) as savings,
+      SUM(potential_savings) as potential
     FROM transactions
     WHERE user_id = ? AND created_at >= ? AND status = 'completed'
     GROUP BY category
@@ -160,6 +171,7 @@ router.get('/stats', authMiddleware, (req, res) => {
       category,
       SUM(amount) as total_amount,
       SUM(savings) as total_savings,
+      SUM(potential_savings) as total_potential,
       COUNT(*) as txn_count
     FROM transactions
     WHERE user_id = ? AND created_at >= ? AND status = 'completed'
@@ -171,16 +183,23 @@ router.get('/stats', authMiddleware, (req, res) => {
     SELECT
       COUNT(*) as transaction_count,
       COALESCE(SUM(amount), 0) as total_spent,
-      COALESCE(SUM(savings), 0) as total_savings
+      COALESCE(SUM(savings), 0) as total_savings,
+      COALESCE(SUM(potential_savings), 0) as total_potential
     FROM transactions
     WHERE user_id = ? AND status = 'completed'
   `).get(req.userId);
 
   res.json({
-    thisMonth: monthStats,
+    thisMonth: {
+      ...monthStats,
+      opportunity_lost: Math.max(0, monthStats.total_potential - monthStats.total_savings)
+    },
     categoryBreakdown,
     cardSpending,
-    allTime: allTimeStats
+    allTime: {
+      ...allTimeStats,
+      opportunity_lost: Math.max(0, allTimeStats.total_potential - allTimeStats.total_savings)
+    }
   });
 });
 

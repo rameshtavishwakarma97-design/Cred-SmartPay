@@ -1,0 +1,45 @@
+{
+  "id": "hdfc-diners-black",
+  "name": "HDFC Diners Club Black Metal",
+  "bank": "HDFC Bank",
+  "network": "Diners",
+  "tier": "super_premium",
+  "annualFee": 10000,
+  "feeWaiverSpend": 800000,
+  "loungeDomestic": -1,
+  "loungeInternational": -1,
+  "forexMarkup": 2,
+  "bestFor": [
+    "general",
+    "travel",
+    "dining",
+    "online_shopping"
+  ],
+  "rewards": {
+    "smartbuy": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points via SmartBuy (flights, hotels, instant vouchers, EGV)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "weekend_dining": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X Reward Points on weekend dining (Sat & Sun) at standalone restaurants",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "Base 5X for Diners Black; 2X multiplier makes it 10X on weekend dining effectively"
+    },
+    "default": {
+      "type": "points",
+      "rate": 5,
+      "label": "5 Reward Points / ₹150 on all retail spends (≈1.67% at SmartBuy value)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    }
+  }
+}

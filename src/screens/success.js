@@ -2,9 +2,11 @@
 // Payment Success Screen (v2 — persists to DB)
 // ============================================
 
-import { recordTransaction, updateTransactionStatus } from '../api.js';
+import { recordTransaction, updateTransactionStatus, logFunnelEvent } from '../api.js';
 
 export function renderSuccess(app, navigate, params) {
+  logFunnelEvent('payment_success');
+  sessionStorage.removeItem('analytics_session_id');
   const amount = params.amount;
   const savings = params.savings;
   const cardName = params.cardName || 'Card';
@@ -19,6 +21,7 @@ export function renderSuccess(app, navigate, params) {
     savePromise = updateTransactionStatus(params.transactionId, 'completed', {
       card_id: params.cardId,
       savings: savings,
+      potential_savings: params.potentialSavings,
       offer_id: params.offerId
     }).catch(err => console.log('Failed to update txn:', err.message));
   } else {
@@ -29,6 +32,7 @@ export function renderSuccess(app, navigate, params) {
       category: params.category || 'general',
       amount: amount,
       savings: savings,
+      potential_savings: params.potentialSavings,
       offer_id: params.offerId
     }).catch(err => console.log('Failed to record transaction:', err.message));
   }

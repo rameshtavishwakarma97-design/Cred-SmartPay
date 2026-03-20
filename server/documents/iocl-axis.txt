@@ -1,0 +1,49 @@
+{
+  "id": "iocl-axis",
+  "name": "IndianOil Axis Bank",
+  "bank": "Axis Bank",
+  "network": "VISA",
+  "tier": "entry",
+  "annualFee": 500,
+  "bestFor": [
+    "fuel",
+    "online_shopping"
+  ],
+  "rewards": {
+    "iocl_fuel": {
+      "type": "cashback",
+      "rate": 4,
+      "label": "4% value back at IndianOil — credited as Turbopoints",
+      "cap": null,
+      "minTxn": 100,
+      "partnerOnly": true
+    },
+    "online_shopping": {
+      "type": "cashback",
+      "rate": 4,
+      "label": "4% cashback on online shopping (Myntra, Amazon, Flipkart, Nykaa)",
+      "cap": null,
+      "minTxn": 100,
+      "merchants": [
+        "myntra",
+        "amazon",
+        "flipkart",
+        "nykaa"
+      ]
+    },
+    "fuel_surcharge": {
+      "type": "surcharge_waiver",
+      "rate": 1,
+      "label": "1% fuel surcharge waiver on all petrol stations",
+      "cap": 250,
+      "minTxn": 400
+    },
+    "default": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 EDGE Reward Point per ₹100 on other spends",
+      "cap": null,
+      "pointValue": 0.2
+    }
+  }
+}

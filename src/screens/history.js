@@ -2,7 +2,7 @@
 // Transaction History Screen
 // ============================================
 
-import { getTransactions, getTransactionStats } from '../api.js';
+import { getTransactions, getTransactionStats, getUser } from '../api.js';
 
 export function renderHistory(app, navigate) {
   const screen = document.createElement('div');
@@ -18,20 +18,12 @@ export function renderHistory(app, navigate) {
     <div id="history-content" style="padding: 0 0 32px;">
       <div style="text-align: center; padding: 60px 24px; color: var(--text-tertiary);">Loading...</div>
     </div>
-    <div class="bottom-nav">
-      <button class="nav-item" id="nav-home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
-      <button class="nav-item" id="nav-pay"><span class="nav-icon">🧠</span><span class="nav-label">Recommend</span></button>
-      <button class="nav-item active" id="nav-history"><span class="nav-icon">📊</span><span class="nav-label">History</span></button>
-      <button class="nav-item" id="nav-rewards"><span class="nav-icon">🎯</span><span class="nav-label">Rewards</span></button>
-    </div>
   `;
 
   app.innerHTML = '';
   app.appendChild(screen);
 
   document.getElementById('history-back')?.addEventListener('click', () => navigate('home'));
-  document.getElementById('nav-home')?.addEventListener('click', () => navigate('home'));
-  document.getElementById('nav-pay')?.addEventListener('click', () => navigate('merchants'));
 
   loadHistory();
 }
@@ -42,7 +34,7 @@ async function loadHistory() {
 
   try {
     const [txnData, statsData] = await Promise.all([
-      getTransactions(1, {}),
+      getTransactions(1, { status: 'completed,cancelled' }),
       getTransactionStats()
     ]);
 
@@ -51,20 +43,33 @@ async function loadHistory() {
     const transactions = txnData.transactions;
     const breakdown = statsData.categoryBreakdown;
 
+    const user = getUser();
+    const isAdmin = user && user.role === 'admin';
+
     content.innerHTML = `
       <!-- Monthly Stats Hero -->
-      <div class="stagger-1" style="padding: 20px 24px;">
-        <div style="display: flex; gap: 12px;">
+      <div class="stagger-1" style="padding: 20px 24px 8px;">
+        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
           <div style="flex: 1; padding: 16px; background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid rgba(255,255,255,0.04);">
             <div style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary); margin-bottom: 6px;">This Month Spent</div>
             <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800;">₹${formatNum(stats.total_spent)}</div>
             <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">${stats.transaction_count} transactions</div>
           </div>
+        </div>
+        
+        <div style="display: flex; gap: 12px;">
           <div style="flex: 1; padding: 16px; background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(132,204,22,0.05)); border-radius: var(--radius-xl); border: 1px solid rgba(16,185,129,0.12);">
-            <div style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--park-green); margin-bottom: 6px;">This Month Saved</div>
+            <div style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--park-green); margin-bottom: 6px;">Saved</div>
             <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--park-green);">₹${formatNum(stats.total_savings)}</div>
-            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">via Smart Pay 🧠</div>
+            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">via Smart Pay 🧠 ${isAdmin ? '(Admin)' : ''}</div>
           </div>
+          ${!isAdmin ? `
+          <div style="flex: 1; padding: 16px; background: linear-gradient(135deg, rgba(248,113,113,0.1), rgba(239,68,68,0.05)); border-radius: var(--radius-xl); border: 1px solid rgba(239,68,68,0.12);">
+            <div style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: #F87171; margin-bottom: 6px;">Opportunity Lost</div>
+            <div style="font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: #F87171;">₹${formatNum(stats.opportunity_lost)}</div>
+            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">missed rewards ❌</div>
+          </div>
+          ` : ''}
         </div>
       </div>
 

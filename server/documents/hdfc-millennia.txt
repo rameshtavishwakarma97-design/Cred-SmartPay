@@ -1,0 +1,117 @@
+{
+  "id": "hdfc-millennia",
+  "name": "Millennia",
+  "bank": "HDFC Bank",
+  "network": "VISA",
+  "last4": "4821",
+  "holder": "SHREYANSH M",
+  "gradient": "card-gradient-1",
+  "color": "#0f3460",
+  "tier": "standard",
+  "annualFee": 1000,
+  "feeWaiverSpend": 100000,
+  "forexMarkup": 3.5,
+  "rewards": {
+    "online_shopping": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% CashPoints on Amazon, Flipkart, BookMyShow, Cult.fit, Myntra, Sony LIV, Swiggy, Tata CLiQ, Uber, Zomato",
+      "cap": 1000,
+      "capUnit": "per_cycle",
+      "minTxn": 100,
+      "cashPointValue": 1,
+      "merchants": [
+        "amazon",
+        "flipkart",
+        "bookmyshow",
+        "cultfit",
+        "myntra",
+        "sonyliv",
+        "swiggy",
+        "tatacliq",
+        "uber",
+        "zomato"
+      ],
+      "note": "Cashback as CashPoints (1 CP = ₹1). Separate cap from 1% category."
+    },
+    "dining": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% CashPoints on Swiggy & Zomato (counted under partner cap)",
+      "cap": 1000,
+      "capUnit": "per_cycle",
+      "minTxn": 100,
+      "note": "Swiggy/Zomato counted under the ₹1,000 partner cap"
+    },
+    "movies": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% CashPoints on BookMyShow",
+      "cap": 1000,
+      "minTxn": 100
+    },
+    "grocery": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% CashPoints on grocery & all other eligible spends",
+      "cap": 1000,
+      "capUnit": "per_cycle",
+      "minTxn": 100
+    },
+    "fuel": {
+      "type": "surcharge_waiver",
+      "rate": 1,
+      "label": "1% fuel surcharge waiver (txn ₹400–₹5,000)",
+      "cap": 250,
+      "minTxn": 400,
+      "maxTxn": 5000,
+      "note": "No CashPoints on fuel spend"
+    },
+    "travel": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% CashPoints on offline travel",
+      "cap": 1000,
+      "minTxn": 100
+    },
+    "utility": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% CashPoints on utility bills",
+      "cap": 1000,
+      "minTxn": 100,
+      "note": "Rent, wallet loads, govt payments excluded"
+    },
+    "insurance": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% CashPoints on insurance",
+      "cap": 1000,
+      "minTxn": 100
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% CashPoints on all other eligible spends",
+      "cap": 1000,
+      "minTxn": 100
+    }
+  },
+  "quarterlyBenefit": {
+    "spend": 100000,
+    "reward": "₹1,000 gift voucher OR 1 domestic lounge access (per calendar quarter)"
+  },
+  "excluded": [
+    "rent",
+    "wallet_load",
+    "govt_payments",
+    "gift_card_load",
+    "voucher_purchase",
+    "forex_transactions"
+  ],
+  "bestFor": [
+    "online_shopping",
+    "dining",
+    "movies"
+  ]
+}

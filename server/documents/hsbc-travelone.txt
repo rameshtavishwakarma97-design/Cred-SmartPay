@@ -1,0 +1,41 @@
+{
+  "id": "hsbc-travelone",
+  "name": "HSBC TravelOne",
+  "bank": "HSBC",
+  "network": "VISA",
+  "tier": "premium",
+  "annualFee": 4999,
+  "loungeDomestic": 8,
+  "loungeInternational": 4,
+  "forexMarkup": 1.75,
+  "bestFor": [
+    "travel"
+  ],
+  "rewards": {
+    "travel": {
+      "type": "points",
+      "rate": 4,
+      "label": "4 Reward Points per ₹100 on travel spends — 1:1 transfer to 7+ airline & hotel programmes",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 1,
+      "partners": [
+        "Air India",
+        "IndiGo",
+        "Marriott Bonvoy",
+        "IHG",
+        "Accor",
+        "Singapore Airlines",
+        "British Airways"
+      ]
+    },
+    "default": {
+      "type": "points",
+      "rate": 2,
+      "label": "2 Reward Points per ₹100 on all other eligible spends",
+      "cap": null,
+      "minTxn": 100,
+      "pointValue": 1
+    }
+  }
+}

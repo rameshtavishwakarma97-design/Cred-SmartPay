@@ -9,54 +9,57 @@ import { userCards, industryCards } from '../data/cards.js';
  */
 function calculateSavings(card, category, amount) {
   const rewardRule = card.rewards[category] || card.rewards.default || card.rewards['default'];
-  if (!rewardRule) return { savings: 0, label: 'No applicable reward', type: 'none', rate: 0 };
+  if (!rewardRule) return { fixedSavings: 0, estimatedSavings: 0, totalSavings: 0, label: 'No applicable reward', type: 'none', rate: 0 };
 
-  let savings = 0;
+  let fixedSavings = 0;
+  let estimatedSavings = 0;
   let label = rewardRule.label;
   let type = rewardRule.type;
   let rate = rewardRule.rate;
 
   if (amount < (rewardRule.minTxn || 0)) {
-    return { savings: 0, label: `Min transaction ₹${rewardRule.minTxn} required`, type: 'ineligible', rate: 0 };
+    return { fixedSavings: 0, estimatedSavings: 0, totalSavings: 0, label: `Min transaction ₹${rewardRule.minTxn} required`, type: 'ineligible', rate: 0 };
   }
 
+  let baseSavings = 0;
   switch (rewardRule.type) {
     case 'cashback':
-      savings = (amount * rewardRule.rate) / 100;
-      if (rewardRule.cap && savings > rewardRule.cap) {
-        savings = rewardRule.cap;
+      baseSavings = (amount * rewardRule.rate) / 100;
+      if (rewardRule.cap && baseSavings > rewardRule.cap) {
+        baseSavings = rewardRule.cap;
       }
+      fixedSavings = baseSavings;
       break;
 
     case 'points':
-      // Assume 1 reward point ≈ ₹0.50 value (industry avg for HDFC/SBI/ICICI)
       const pointValue = rewardRule.pointValue || 0.5;
-      const basePoints = Math.floor(amount / 150); // typically 1 point per ₹150
+      const basePoints = Math.floor(amount / (rewardRule.spendBase || 150));
       const multipliedPoints = basePoints * rewardRule.rate;
-      savings = multipliedPoints * pointValue;
+      baseSavings = multipliedPoints * pointValue;
+      fixedSavings = baseSavings;
       break;
 
     case 'surcharge_waiver':
-      // Fuel surcharge saving
-      savings = (amount * rewardRule.rate) / 100;
-      if (rewardRule.cap && savings > rewardRule.cap) {
-        savings = rewardRule.cap;
+      baseSavings = (amount * rewardRule.rate) / 100;
+      if (rewardRule.cap && baseSavings > rewardRule.cap) {
+        baseSavings = rewardRule.cap;
       }
+      fixedSavings = baseSavings;
       break;
 
     default:
-      savings = 0;
+      fixedSavings = 0;
   }
 
-  // Add Dineout discount if applicable
+  // Add Dineout discount as ESTIMATED (since it depends on merchant integration/eligibility)
   if (rewardRule.dineoutDiscount && category === 'dining') {
-    const dineoutSaving = (amount * rewardRule.dineoutDiscount) / 100;
-    savings += dineoutSaving;
-    label += ` + ${rewardRule.dineoutDiscount}% Dineout`;
+    estimatedSavings = (amount * rewardRule.dineoutDiscount) / 100;
   }
 
   return {
-    savings: Math.round(savings * 100) / 100,
+    fixedSavings: Math.round(fixedSavings * 100) / 100,
+    estimatedSavings: Math.round(estimatedSavings * 100) / 100,
+    totalSavings: Math.round((fixedSavings + estimatedSavings) * 100) / 100,
     label,
     type,
     rate,
@@ -82,17 +85,23 @@ function calculateIndustrySavings(card, category, amount) {
     if (rewardRule.cap && savings > rewardRule.cap) {
       savings = rewardRule.cap;
     }
-  } else if (rewardRule.type === 'points') {
-    const pointValue = 0.5;
-    const basePoints = Math.floor(amount / 100);
-    savings = basePoints * rewardRule.rate * pointValue;
+    const pointsValue = POINT_VALUES[card.bank] || 0.25;
+    const basePoints = Math.floor(amount / (rewardRule.spendBase || 100)); // Default to per ₹100
+    savings = basePoints * rewardRule.rate * pointsValue;
+  }
+
+  // Symmetric Dineout logic: If category is dining and card rule has a discount
+  if (rewardRule.dineoutDiscount && category === 'dining') {
+    const dineoutSaving = (amount * rewardRule.dineoutDiscount) / 100;
+    savings += dineoutSaving;
   }
 
   return {
     savings: Math.round(savings * 100) / 100,
     label: rewardRule.label,
     rate: rewardRule.rate,
-    cap: rewardRule.cap
+    cap: rewardRule.cap,
+    dineoutDiscount: rewardRule.dineoutDiscount
   };
 }
 
@@ -106,36 +115,71 @@ export function getRecommendations(merchantCategory, amount, credCashback = 0) {
     const result = calculateSavings(card, merchantCategory, amount);
     const credSaving = (amount * credCashback) / 100;
 
+    // CRED Cashback is FIXED (guaranteed by our app)
+    const finalFixed = Math.round(result.fixedSavings + credSaving);
+    const finalEstimated = result.estimatedSavings;
+    const finalTotal = finalFixed + finalEstimated;
+
     return {
       card,
       ...result,
+      fixedSavings: finalFixed,
+      estimatedSavings: finalEstimated,
+      totalSavings: finalTotal,
       credCashback: Math.round(credSaving),
-      totalSavings: Math.round((result.savings + credSaving) * 100) / 100,
       reasoning: buildReasoning(card, result, merchantCategory, amount)
     };
   });
 
-  // Sort by total savings, descending
-  userResults.sort((a, b) => b.totalSavings - a.totalSavings);
+  // Sort: First by total savings, but if close, favor higher fixed savings
+  userResults.sort((a, b) => {
+    if (Math.abs(b.totalSavings - a.totalSavings) < 1) {
+      return b.fixedSavings - a.fixedSavings;
+    }
+    return b.totalSavings - a.totalSavings;
+  });
 
   // 2. Find the best industry card for this category
   const industryResults = industryCards
     .filter(card => card.bestFor.includes(merchantCategory))
     .map(card => {
-      const result = calculateIndustrySavings(card, merchantCategory, amount);
+      // Small helper for industry split logic (symmetric to user cards)
+      const rewardRule = card.rewards[merchantCategory] || card.rewards.default;
+      let fixed = 0;
+      let estimated = 0;
+      
+      if (rewardRule.type === 'cashback') {
+        fixed = (amount * rewardRule.rate) / 100;
+        if (rewardRule.cap && fixed > rewardRule.cap) fixed = rewardRule.cap;
+      } else if (rewardRule.type === 'points') {
+        const pv = POINT_VALUES[card.bank] || 0.25;
+        fixed = Math.floor(amount / (rewardRule.spendBase || 100)) * rewardRule.rate * pv;
+      }
+
+      if (rewardRule.dineoutDiscount && merchantCategory === 'dining') {
+        estimated = (amount * rewardRule.dineoutDiscount) / 100;
+      }
+
+      const credSaving = (amount * credCashback) / 100;
+      const finalFixed = Math.round(fixed + credSaving);
+      const finalTotal = finalFixed + estimated;
+
       return {
         card,
-        ...result,
-        reasoning: `${card.name} offers ${result.label}. Annual fee: ₹${card.annualFee}.`
+        fixedSavings: finalFixed,
+        estimatedSavings: estimated,
+        totalSavings: finalTotal,
+        label: rewardRule.label,
+        reasoning: `${rewardRule.label} ${estimated > 0 ? `+ ${rewardRule.dineoutDiscount}% Dineout` : ''}`
       };
     })
-    .sort((a, b) => b.savings - a.savings);
+    .sort((a, b) => b.totalSavings - a.totalSavings);
 
   const bestIndustry = industryResults[0] || null;
 
   // 3. Determine if industry card beats user's best
   const userBest = userResults[0];
-  const industryBeatUser = bestIndustry && bestIndustry.savings > userBest.totalSavings;
+  const industryBeatUser = bestIndustry && bestIndustry.totalSavings > userBest.totalSavings;
 
   return {
     userCards: userResults,

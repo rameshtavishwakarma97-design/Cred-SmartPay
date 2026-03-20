@@ -1,0 +1,40 @@
+{
+  "id": "axis-reserve",
+  "name": "Axis Reserve",
+  "bank": "Axis Bank",
+  "network": "VISA",
+  "tier": "super_premium",
+  "annualFee": 50000,
+  "loungeDomestic": -1,
+  "loungeInternational": -1,
+  "forexMarkup": 1.5,
+  "bestFor": [
+    "travel",
+    "general"
+  ],
+  "rewards": {
+    "international_travel": {
+      "type": "points",
+      "rate": 30,
+      "label": "30 EDGE Reward Points per ₹200 on international spends (2X vs domestic)",
+      "cap": null,
+      "minTxn": 200,
+      "pointValue": 0.2
+    },
+    "default": {
+      "type": "points",
+      "rate": 15,
+      "label": "15 EDGE Reward Points per ₹200 on all domestic retail spends",
+      "cap": null,
+      "minTxn": 200,
+      "pointValue": 0.2
+    },
+    "movies": {
+      "type": "discount",
+      "rate": 50,
+      "label": "Buy 1 Get 1 Free on BookMyShow — up to 5 free tickets per month",
+      "cap": null,
+      "note": "No monetary cap mentioned; 5 free ticket benefit per calendar month"
+    }
+  }
+}

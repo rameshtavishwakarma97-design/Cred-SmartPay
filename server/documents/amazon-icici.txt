@@ -1,0 +1,79 @@
+{
+  "id": "amazon-icici",
+  "name": "Amazon Pay",
+  "bank": "ICICI Bank",
+  "network": "VISA",
+  "last4": "5150",
+  "holder": "SHREYANSH M",
+  "gradient": "card-gradient-3",
+  "color": "#333333",
+  "tier": "standard",
+  "annualFee": 0,
+  "forexMarkup": 1.99,
+  "rewards": {
+    "amazon_prime": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% back on Amazon.in for Prime members (credited as Amazon Pay balance)",
+      "cap": null,
+      "minTxn": 1,
+      "isPrime": true,
+      "note": "Applicable on eligible Amazon.in purchases. Excludes EMI, gold, rent, fuel."
+    },
+    "amazon_non_prime": {
+      "type": "cashback",
+      "rate": 3,
+      "label": "3% back on Amazon.in for non-Prime members",
+      "cap": null,
+      "minTxn": 1,
+      "isPrime": false
+    },
+    "amazon_pay_partners": {
+      "type": "cashback",
+      "rate": 2,
+      "label": "2% cashback at 100+ Amazon Pay partner merchants (e.g. Prakash Petrolium, BigBazaar, Paytm)",
+      "cap": null,
+      "minTxn": 1,
+      "note": "Must pay via Amazon Pay interface"
+    },
+    "utility": {
+      "type": "cashback",
+      "rate": 2,
+      "label": "2% on recharge & bill payments via Amazon Pay",
+      "cap": null,
+      "minTxn": 1
+    },
+    "fuel": {
+      "type": "surcharge_waiver",
+      "rate": 1,
+      "label": "1% fuel surcharge waiver (txn up to ₹4,000)",
+      "cap": 250,
+      "minTxn": 100,
+      "maxTxn": 4000
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% cashback on all other offline/online spends",
+      "cap": null,
+      "minTxn": 1
+    }
+  },
+  "loungeAccess": {
+    "domestic": 8,
+    "loungeCondition": "Min ₹75,000 spend in previous quarter"
+  },
+  "excluded": [
+    "gold_purchase",
+    "rent",
+    "fuel_amazon",
+    "emi",
+    "education",
+    "tax",
+    "international_amazon"
+  ],
+  "bestFor": [
+    "online_shopping",
+    "grocery"
+  ]
+}

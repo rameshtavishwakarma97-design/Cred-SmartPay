@@ -32,6 +32,39 @@ function runMigrations(db) {
     // Column likely exists
   }
   try {
+    db.prepare('ALTER TABLE users ADD COLUMN role TEXT DEFAULT "user"').run();
+  } catch (e) {}
+  try {
+    db.prepare('ALTER TABLE transactions ADD COLUMN potential_savings REAL DEFAULT 0').run();
+  } catch (e) {}
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS recommendation_impressions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        merchant_id TEXT NOT NULL,
+        amount REAL NOT NULL,
+        recommended_card_id TEXT NOT NULL,
+        selected_card_id TEXT,
+        latency_ms INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+      CREATE TABLE IF NOT EXISTS funnel_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        user_id INTEGER,
+        event_name TEXT NOT NULL,
+        metadata TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_impressions_date ON recommendation_impressions(created_at);
+      CREATE INDEX IF NOT EXISTS idx_funnel_session ON funnel_events(session_id);
+    `);
+  } catch (e) {
+    console.warn('Analytics table migration warning:', e.message);
+  }
+  try {
     // We cannot drop NOT NULL via ALTER TABLE in standard SQLite, 
     // but we can just leave it as is if it fails. The default behavior 
     // for pending is card_id = null. We can bypass NOT NULL by storing dummy or recreating table.
@@ -79,6 +112,7 @@ function initSchema() {
       email TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'user',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -101,6 +135,7 @@ function initSchema() {
       category TEXT NOT NULL,
       amount REAL NOT NULL,
       savings REAL DEFAULT 0,
+      potential_savings REAL DEFAULT 0,
       offer_id INTEGER,
       status TEXT DEFAULT 'completed',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -163,6 +198,30 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_offers_active ON offers(is_active, end_date);
     CREATE INDEX IF NOT EXISTS idx_offers_card ON offers(card_id);
     CREATE INDEX IF NOT EXISTS idx_offer_usage_user ON offer_usage(user_id, offer_id);
+
+    CREATE TABLE IF NOT EXISTS recommendation_impressions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      merchant_id TEXT NOT NULL,
+      amount REAL NOT NULL,
+      recommended_card_id TEXT NOT NULL,
+      selected_card_id TEXT,
+      latency_ms INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS funnel_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id TEXT NOT NULL,
+      user_id INTEGER,
+      event_name TEXT NOT NULL,
+      metadata TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_impressions_date ON recommendation_impressions(created_at);
+    CREATE INDEX IF NOT EXISTS idx_funnel_session ON funnel_events(session_id);
   `);
 }
 

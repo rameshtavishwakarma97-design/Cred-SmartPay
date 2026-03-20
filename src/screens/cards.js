@@ -2,7 +2,7 @@
 // Cards Screen — Detailed Wallet View (Enhanced)
 // ============================================
 
-import { getProfile } from '../api.js';
+import { getProfile, getCards, addUserCard, deleteUserCard } from '../api.js';
 
 export function renderCards(app, navigate) {
   const screen = document.createElement('div');
@@ -13,16 +13,12 @@ export function renderCards(app, navigate) {
     <div class="screen-header">
       <button class="back-btn" id="cards-back">←</button>
       <span class="header-title">My Cards</span>
-      <div class="header-action"></div>
+      <div class="header-action">
+        <button id="add-card-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--orange-sunshine); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">+</button>
+      </div>
     </div>
     <div id="cards-content" class="screen-padding" style="padding-top: 20px; padding-bottom: 100px;">
       <div style="text-align: center; padding: 60px 24px; color: var(--text-tertiary);">Loading your wallet...</div>
-    </div>
-    <div class="bottom-nav">
-      <button class="nav-item active" id="nav-home"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
-      <button class="nav-item" id="nav-pay"><span class="nav-icon">🧠</span><span class="nav-label">Recommend</span></button>
-      <button class="nav-item" id="nav-history"><span class="nav-icon">📊</span><span class="nav-label">History</span></button>
-      <button class="nav-item" id="nav-rewards"><span class="nav-icon">🎯</span><span class="nav-label">Rewards</span></button>
     </div>
   `;
 
@@ -30,11 +26,158 @@ export function renderCards(app, navigate) {
   app.appendChild(screen);
 
   document.getElementById('cards-back')?.addEventListener('click', () => navigate('home'));
-  document.getElementById('nav-home')?.addEventListener('click', () => navigate('home'));
-  document.getElementById('nav-pay')?.addEventListener('click', () => navigate('merchants'));
-  document.getElementById('nav-history')?.addEventListener('click', () => navigate('history'));
+
+  document.getElementById('add-card-btn')?.addEventListener('click', () => showAddCardModal(loadCards));
 
   loadCards();
+}
+
+async function showAddCardModal(onSuccess) {
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-overlay';
+  modalOverlay.style.zIndex = '1000';
+  
+  modalOverlay.innerHTML = `
+    <div class="modal" style="max-height: 80vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <h2 class="modal-title">Add New Card</h2>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; flex: 1;">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Select Card Template</label>
+          <select id="card-template-select" style="width: 100%; background: var(--bg-elevated); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 12px; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right%2012px%20top%2050%25; background-size: 10px%20auto;">
+            <option value="" disabled selected>Choose a card...</option>
+          </select>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Last 4 Digits</label>
+          <input type="text" id="new-card-last4" maxlength="4" placeholder="4821" style="width: 100%; background: var(--bg-elevated); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 12px; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem;">
+        </div>
+
+        <div style="margin-bottom: 5px;">
+          <label style="display: block; font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;">Nickname (Optional)</label>
+          <input type="text" id="new-card-nickname" placeholder="Primary Shopping Card" style="width: 100%; background: var(--bg-elevated); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: 12px; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" id="add-card-cancel">Cancel</button>
+        <button class="modal-btn modal-btn-primary" id="add-card-confirm" disabled style="opacity: 0.5;">Add Card</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modalOverlay);
+  
+  let selectedTemplateId = null;
+
+  try {
+    const { cards } = await getCards();
+    const select = document.getElementById('card-template-select');
+    
+    // Group cards by bank for better organization
+    const grouped = cards.reduce((acc, c) => {
+      if (!acc[c.bank]) acc[c.bank] = [];
+      acc[c.bank].push(c);
+      return acc;
+    }, {});
+
+    select.innerHTML = '<option value="" disabled selected>Choose a card...</option>' + 
+      Object.entries(grouped).map(([bank, bankCards]) => `
+        <optgroup label="${bank}">
+          ${bankCards.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </optgroup>
+      `).join('');
+
+    select.addEventListener('change', (e) => {
+      selectedTemplateId = e.target.value;
+      checkInputs();
+    });
+  } catch (err) {
+    console.error('Failed to load card templates', err);
+  }
+
+  const last4Input = document.getElementById('new-card-last4');
+  const confirmBtn = document.getElementById('add-card-confirm');
+
+  const checkInputs = () => {
+    const isReady = selectedTemplateId && last4Input.value.length === 4;
+    confirmBtn.disabled = !isReady;
+    confirmBtn.style.opacity = isReady ? '1' : '0.5';
+  };
+
+  last4Input.addEventListener('input', checkInputs);
+
+  document.getElementById('add-card-cancel')?.addEventListener('click', () => {
+    modalOverlay.classList.remove('active');
+    setTimeout(() => modalOverlay.remove(), 300);
+  });
+
+  document.getElementById('add-card-confirm')?.addEventListener('click', async () => {
+    const last4 = last4Input.value;
+    const nickname = document.getElementById('new-card-nickname').value;
+    
+    confirmBtn.disabled = true;
+    confirmBtn.innerText = 'Adding...';
+
+    try {
+      await addUserCard({ card_id: selectedTemplateId, last4, nickname });
+      modalOverlay.classList.remove('active');
+      setTimeout(() => {
+        modalOverlay.remove();
+        onSuccess();
+      }, 300);
+    } catch (err) {
+      alert('Failed to add card: ' + err.message);
+      confirmBtn.disabled = false;
+      confirmBtn.innerText = 'Add Card';
+    }
+  });
+
+  requestAnimationFrame(() => modalOverlay.classList.add('active'));
+}
+
+async function showDeleteConfirmModal(userCardId, cardName, onSuccess) {
+  const modalOverlay = document.createElement('div');
+  modalOverlay.className = 'modal-overlay';
+  modalOverlay.style.zIndex = '1000';
+  
+  modalOverlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Remove Card</h2>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">Are you sure you want to remove <strong>${cardName}</strong> from your wallet?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" id="delete-cancel">Cancel</button>
+        <button class="modal-btn modal-btn-danger" id="delete-confirm">Remove</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modalOverlay);
+  
+  document.getElementById('delete-cancel')?.addEventListener('click', () => {
+    modalOverlay.classList.remove('active');
+    setTimeout(() => modalOverlay.remove(), 300);
+  });
+  
+  document.getElementById('delete-confirm')?.addEventListener('click', async () => {
+    try {
+      await deleteUserCard(userCardId);
+      modalOverlay.classList.remove('active');
+      setTimeout(() => {
+        modalOverlay.remove();
+        onSuccess();
+      }, 300);
+    } catch (err) {
+      alert('Failed to delete card: ' + err.message);
+    }
+  });
+  
+  requestAnimationFrame(() => modalOverlay.classList.add('active'));
 }
 
 function getTierLabel(tier) {
@@ -165,11 +308,16 @@ async function loadCards() {
                   ${tierLabel}
                 </span>
               </div>
-              <div style="text-align: right;">
-                <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-bottom: 2px;">Annual Fee</div>
-                <div style="font-weight: 700; font-family: var(--font-display); font-size: 1rem; color: ${annualFee === 0 ? '#4caf50' : 'var(--text-primary)'};">
-                  ${annualFee === 0 ? 'FREE' : '₹' + annualFee.toLocaleString('en-IN')}
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div style="text-align: right;">
+                  <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-bottom: 2px;">Annual Fee</div>
+                  <div style="font-weight: 700; font-family: var(--font-display); font-size: 1rem; color: ${annualFee === 0 ? '#4caf50' : 'var(--text-primary)'};">
+                    ${annualFee === 0 ? 'FREE' : '₹' + annualFee.toLocaleString('en-IN')}
+                  </div>
                 </div>
+                <button class="delete-card-btn" data-id="${c.user_card_id}" data-name="${c.full_name || c.nickname}" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: var(--error); border-radius: 6px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 150ms ease;">
+                  <span style="font-size: 1rem;">🗑️</span>
+                </button>
               </div>
             </div>
 
@@ -194,6 +342,15 @@ async function loadCards() {
         ${cardHTMLs.join('')}
       </div>
     `;
+
+    // Add event listeners for delete buttons
+    document.querySelectorAll('.delete-card-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.id;
+        const name = e.currentTarget.dataset.name;
+        showDeleteConfirmModal(id, name, loadCards);
+      });
+    });
 
   } catch (err) {
     content.innerHTML = `

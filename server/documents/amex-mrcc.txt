@@ -1,0 +1,38 @@
+{
+  "id": "amex-mrcc",
+  "name": "Amex Membership Rewards",
+  "bank": "Amex",
+  "network": "Amex",
+  "tier": "premium",
+  "annualFee": 1500,
+  "bestFor": [
+    "general",
+    "dining"
+  ],
+  "rewards": {
+    "base": {
+      "type": "points",
+      "rate": 1,
+      "label": "1 MR Point per ₹50 spent on eligible transactions",
+      "cap": null,
+      "minTxn": 50,
+      "pointValue": 0.5,
+      "note": "18,000 MR Points milestone every 6 months on reaching ₹1.5 Lakh spend within the period"
+    },
+    "amex_partners": {
+      "type": "points",
+      "rate": 5,
+      "label": "5X MR Points at partner merchants — Amazon, Flipkart, Paytm, Myntra, BookMyShow",
+      "cap": null,
+      "minTxn": 50,
+      "note": "Amex Offers — merchant-specific, varies monthly"
+    },
+    "dining": {
+      "type": "discount",
+      "rate": 25,
+      "label": "Up to 25% off at 1,500+ EazyDiner partner restaurants via Amex",
+      "cap": null,
+      "minTxn": 0
+    }
+  }
+}

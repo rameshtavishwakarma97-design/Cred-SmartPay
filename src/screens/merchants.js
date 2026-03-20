@@ -12,7 +12,7 @@ export function renderMerchants(app, navigate) {
   screen.innerHTML = `
     <div class="screen-header">
       <button class="back-btn" id="merchants-back">←</button>
-      <span class="header-title">CRED Recommend</span>
+      <span class="header-title">SmartPay</span>
       <div class="header-action"></div>
     </div>
 

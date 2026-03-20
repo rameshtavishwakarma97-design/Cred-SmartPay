@@ -1,0 +1,98 @@
+{
+  "id": "hdfc-diners-privilege",
+  "name": "Diners Club Privilege",
+  "bank": "HDFC Bank",
+  "network": "Diners",
+  "last4": "0088",
+  "holder": "SHREYANSH M",
+  "gradient": "card-gradient-4",
+  "color": "#2d0a4e",
+  "tier": "premium",
+  "annualFee": 2500,
+  "feeWaiverSpend": 300000,
+  "loungeDomestic": 12,
+  "loungeInternational": 6,
+  "forexMarkup": 2,
+  "rewards": {
+    "smartbuy": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points (40 RP/₹150) via HDFC SmartBuy — flights, hotels, vouchers",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "10X capped at a monthly limit; base 1X continues after cap"
+    },
+    "swiggy_zomato": {
+      "type": "points",
+      "rate": 5,
+      "label": "5X Reward Points (20 RP/₹150) on Swiggy & Zomato",
+      "cap": 2500,
+      "capUnit": "per_month_per_merchant",
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "Base 1X continues beyond cap. Cap is on accelerated (4X) component."
+    },
+    "dining": {
+      "type": "points",
+      "rate": 2,
+      "label": "2X Reward Points on weekend dining at standalone restaurants",
+      "cap": 500,
+      "capUnit": "per_day",
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "Only Sat & Sun"
+    },
+    "movies": {
+      "type": "discount",
+      "rate": 50,
+      "label": "Buy 1 Get 1 Free on BookMyShow (Fri/Sat/Sun, max ₹250 off per ticket, 2 free tickets/month)",
+      "cap": 500,
+      "minTxn": 0,
+      "note": "Not a points benefit — direct discount via BMS offer"
+    },
+    "dineout": {
+      "type": "discount",
+      "rate": 20,
+      "label": "Up to 20% off at 20,000+ Swiggy Dineout restaurants",
+      "cap": null,
+      "minTxn": 0
+    },
+    "travel": {
+      "type": "points",
+      "rate": 4,
+      "label": "4 Reward Points / ₹150 on travel bookings (non-SmartBuy)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "default": {
+      "type": "points",
+      "rate": 4,
+      "label": "4 Reward Points / ₹150 on all retail spends (≈1.33% value)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "insurance": {
+      "type": "points",
+      "rate": 0,
+      "label": "Excluded from reward points",
+      "cap": 0,
+      "minTxn": 0
+    }
+  },
+  "excluded": [
+    "fuel",
+    "wallet_load",
+    "rent",
+    "emi",
+    "insurance"
+  ],
+  "bestFor": [
+    "dining",
+    "travel",
+    "movies",
+    "online_shopping"
+  ]
+}

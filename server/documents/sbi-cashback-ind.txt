@@ -1,0 +1,44 @@
+{
+  "id": "sbi-cashback-ind",
+  "name": "Cashback SBI Card",
+  "bank": "SBI Card",
+  "network": "VISA",
+  "tier": "standard",
+  "annualFee": 999,
+  "feeWaiverSpend": 200000,
+  "bestFor": [
+    "online_shopping"
+  ],
+  "rewards": {
+    "online_shopping": {
+      "type": "cashback",
+      "rate": 5,
+      "label": "5% automatic cashback on ALL online spends — any merchant, no restriction",
+      "cap": 5000,
+      "capUnit": "per_cycle",
+      "minTxn": 100,
+      "note": "Auto-credited within 2 business days. Cap dropping to ₹2,000 from Apr 1, 2026."
+    },
+    "default": {
+      "type": "cashback",
+      "rate": 1,
+      "label": "1% cashback on offline spends",
+      "cap": 5000,
+      "capUnit": "per_cycle",
+      "minTxn": 100
+    }
+  },
+  "excluded": [
+    "fuel",
+    "utility",
+    "insurance",
+    "rent",
+    "wallet_load",
+    "education",
+    "jewellery",
+    "railway",
+    "emi",
+    "gaming",
+    "toll"
+  ]
+}

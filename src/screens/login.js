@@ -2,11 +2,12 @@
 // Login / Signup Screen
 // ============================================
 
-import { login, signup, isLoggedIn, createPendingTransaction } from '../api.js';
+import { login, signup, isLoggedIn, getUser, createPendingTransaction } from '../api.js';
 
 export function renderLogin(app, navigate) {
-  if (isLoggedIn()) {
-    navigate('home');
+  const user = getUser();
+  if (user) {
+    navigate(user.role === 'admin' ? 'dashboard' : 'home');
     return;
   }
 
@@ -124,9 +125,11 @@ export function renderLogin(app, navigate) {
 
     try {
       if (mode === 'signup') {
-        await signup(email, name, password);
+        const data = await signup(email, name, password);
+        if (data.user.role === 'admin') { navigate('dashboard'); return; }
       } else {
-        await login(email, password);
+        const data = await login(email, password);
+        if (data.user.role === 'admin') { navigate('dashboard'); return; }
       }
       
       // Check for pending transaction

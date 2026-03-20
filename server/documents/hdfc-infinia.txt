@@ -1,0 +1,41 @@
+{
+  "id": "hdfc-infinia",
+  "name": "HDFC Infinia Metal",
+  "bank": "HDFC Bank",
+  "network": "VISA",
+  "tier": "super_premium",
+  "annualFee": 12500,
+  "loungeDomestic": -1,
+  "loungeInternational": -1,
+  "forexMarkup": 2,
+  "bestFor": [
+    "general",
+    "travel",
+    "online_shopping"
+  ],
+  "rewards": {
+    "smartbuy": {
+      "type": "points",
+      "rate": 10,
+      "label": "10X Reward Points (50 RP/₹150) via HDFC SmartBuy — flights, hotels, instant vouchers",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5,
+      "note": "No capping on SmartBuy 10X for Infinia unlike Regalia/Diners"
+    },
+    "default": {
+      "type": "points",
+      "rate": 5,
+      "label": "5 Reward Points / ₹150 on all eligible retail spends (≈1.67% effective value)",
+      "cap": null,
+      "minTxn": 150,
+      "pointValue": 0.5
+    },
+    "dining": {
+      "type": "discount",
+      "rate": 20,
+      "label": "Up to 20% off at 10,000+ Swiggy Dineout restaurants; Golf privileges at 400+ courses",
+      "cap": null
+    }
+  }
+}
