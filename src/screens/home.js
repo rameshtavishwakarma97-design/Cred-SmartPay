@@ -15,11 +15,8 @@ export function renderHome(app, navigate) {
     <div style="padding: 24px 24px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-primary);">
       <div>
         <div style="display: flex; align-items: baseline; gap: 8px;">
-          <span style="font-size: 1.1rem; color: var(--text-primary); font-weight: 700; letter-spacing: -0.02em;">explore</span>
           <span style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; letter-spacing: -0.01em; color: var(--text-primary); text-transform: uppercase;">CRED</span>
-          <span class="new-badge-nudge">SMART PAY ⚡</span>
         </div>
-        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 4px; letter-spacing: 0.05em;">Best card recommendations inside 🧠</div>
       </div>
       <div id="profile-btn" style="width: 40px; height: 40px; border-radius: 50%; background: #000000; border: 1.5px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -62,7 +59,7 @@ export function renderHome(app, navigate) {
         </div>
         <div class="icon-item nudge-highlight" id="nav-smartpay">
           <div class="circular-icon" style="background: radial-gradient(circle at center, #2A1A2A 0%, #1A1A1A 100%);">🧠</div>
-          <div class="icon-label">SmartPay</div>
+          <div class="icon-label">REWARDS</div>
         </div>
       </div>
     </div>

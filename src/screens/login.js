@@ -21,13 +21,9 @@ export function renderLogin(app, navigate) {
   function render() {
     screen.innerHTML = `
       <!-- Logo -->
-      <div style="text-align: center; margin-bottom: 40px;" class="stagger-1">
-        <div style="font-family: var(--font-display); font-size: 2rem; font-weight: 800; letter-spacing: -0.02em;">
-          smart<span style="color: var(--orange-sunshine);">pay</span>
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-top: 4px;">by CRED</div>
-        <div style="margin-top: 16px; font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; line-height: 1.6;">
-          Pay smarter with AI-powered card recommendations. Save more on every transaction.
+      <div style="text-align: center; margin-bottom: 60px;" class="stagger-1">
+        <div style="font-family: var(--font-display); font-size: 2.5rem; font-weight: 950; letter-spacing: -0.02em; text-transform: uppercase;">
+          CRED
         </div>
       </div>
 
@@ -70,26 +66,6 @@ export function renderLogin(app, navigate) {
 
         <div style="text-align: center; margin-top: 20px; font-size: 0.72rem; color: var(--text-tertiary);">
           ${mode === 'login' ? 'New here? Switch to <strong>Sign Up</strong> tab above' : 'Already have an account? Switch to <strong>Login</strong> tab'}
-        </div>
-      </div>
-
-      <!-- Features -->
-      <div class="stagger-3" style="margin-top: 48px; display: flex; gap: 24px; max-width: 340px; width: 100%;">
-        <div style="flex: 1; text-align: center;">
-          <div style="font-size: 1.4rem;">🧠</div>
-          <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">Smart AI</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-          <div style="font-size: 1.4rem;">💳</div>
-          <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">25+ Cards</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-          <div style="font-size: 1.4rem;">📊</div>
-          <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">Track Savings</div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-          <div style="font-size: 1.4rem;">🎁</div>
-          <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px;">Live Offers</div>
         </div>
       </div>
     `;
