@@ -2426,3 +2426,26 @@ body {
 
 .trend-up { color: var(--park-green); }
 .trend-down { color: var(--error); }
+
+/* --- SmartPay Badge & Header Refinement --- */
+.header-nudge-badge {
+  background: var(--neo-pacha);
+  color: #000000;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 0 15px rgba(132, 204, 22, 0.3);
+}
+
+.header-subtext {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}

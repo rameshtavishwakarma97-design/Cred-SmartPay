@@ -12,18 +12,27 @@ export function renderHome(app, navigate) {
 
   screen.innerHTML = `
     <!-- Header -->
-    <div style="padding: 24px 24px 12px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-primary);">
-      <div>
-        <div style="display: flex; align-items: baseline; gap: 8px;">
-          <span style="font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; letter-spacing: -0.01em; color: var(--text-primary); text-transform: uppercase;">CRED</span>
+    <div style="padding: 24px 24px 16px; background: var(--bg-primary);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="display: flex; align-items: baseline; gap: 6px;">
+            <span style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; color: var(--text-primary); letter-spacing: -0.02em;">explore</span>
+            <span style="font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--text-primary); letter-spacing: -0.02em; text-transform: uppercase;">CRED</span>
+          </div>
+          <div class="header-nudge-badge">
+            SMART PAY ⚡
+          </div>
+        </div>
+        <div id="profile-btn" style="width: 44px; height: 44px; border-radius: 50%; background: #000000; border: 1.5px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 14c-3.314 0-6 2.686-6 6v1h12v-1c0-3.314-2.686-6-6-6z" />
+            <circle cx="12" cy="8" r="4" />
+            <path d="M7 6.5s1-1.5 5-1.5 5 1.5 5 1.5M7 6.5v1M17 6.5v1" />
+          </svg>
         </div>
       </div>
-      <div id="profile-btn" style="width: 40px; height: 40px; border-radius: 50%; background: #000000; border: 1.5px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 14c-3.314 0-6 2.686-6 6v1h12v-1c0-3.314-2.686-6-6-6z" />
-          <circle cx="12" cy="8" r="4" />
-          <path d="M7 6.5s1-1.5 5-1.5 5 1.5 5 1.5M7 6.5v1M17 6.5v1" />
-        </svg>
+      <div class="header-subtext">
+        Best card recommendations inside 🧠
       </div>
     </div>
 
@@ -59,7 +68,7 @@ export function renderHome(app, navigate) {
         </div>
         <div class="icon-item nudge-highlight" id="nav-smartpay">
           <div class="circular-icon" style="background: radial-gradient(circle at center, #2A1A2A 0%, #1A1A1A 100%);">🧠</div>
-          <div class="icon-label">REWARDS</div>
+          <div class="icon-label">SmartPay</div>
         </div>
       </div>
     </div>
