@@ -128,17 +128,44 @@ try {
   console.log(`  ℹ️  Offers already seeded`);
 }
 
-// Seed admin user
-try {
-  const adminPwdHash = bcrypt.hashSync('admin123', 10);
-  db.prepare(`
-    INSERT OR REPLACE INTO users (email, name, password_hash, role)
-    VALUES (?, ?, ?, ?)
-  `).run('admin@cred.club', 'System Admin', adminPwdHash, 'admin');
-  console.log(`  ✅ Seeded/Updated admin user`);
-} catch (e) {
-  console.error('Failed to seed admin user:', e.message);
-}
+  // Seed admin user
+  try {
+    const adminPwdHash = bcrypt.hashSync('admin123', 10);
+    db.prepare(`
+      INSERT OR REPLACE INTO users (email, name, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run('admin@cred.club', 'System Admin', adminPwdHash, 'admin');
+    console.log(`  ✅ Seeded/Updated admin user`);
+
+    // Seed test user
+    const testPwdHash = bcrypt.hashSync('password123', 10);
+    db.prepare(`
+      INSERT OR IGNORE INTO users (email, name, password_hash, role)
+      VALUES (?, ?, ?, ?)
+    `).run('test@example.com', 'Test User', testPwdHash, 'user');
+    
+    // Check if test user already has cards, if not seed them
+    const testUser = db.prepare('SELECT id FROM users WHERE email = ?').get('test@example.com');
+    if (testUser) {
+      const existingCards = db.prepare('SELECT COUNT(*) as count FROM user_cards WHERE user_id = ?').get(testUser.id);
+      if (existingCards.count === 0) {
+        const defaultCards = [
+          { card_id: 'hdfc-millennia', last4: '4821', nickname: 'HDFC Millennia' },
+          { card_id: 'sbi-cashback', last4: '7392', nickname: 'SBI Cashback' },
+          { card_id: 'amazon-icici', last4: '5150', nickname: 'Amazon Pay ICICI' },
+          { card_id: 'axis-ace', last4: '6234', nickname: 'Axis ACE' }
+        ];
+        const insertCard = db.prepare('INSERT INTO user_cards (user_id, card_id, last4, nickname) VALUES (?, ?, ?, ?)');
+        for (const card of defaultCards) {
+          insertCard.run(testUser.id, card.card_id, card.last4, card.nickname);
+        }
+        console.log(`  ✅ Seeded default cards for test user`);
+      }
+    }
+    console.log(`  ✅ Seeded/Updated test user`);
+  } catch (e) {
+    console.error('Failed to seed users:', e.message);
+  }
 
 // Routes
 app.use('/api/auth', authRoutes);

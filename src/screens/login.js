@@ -67,6 +67,25 @@ export function renderLogin(app, navigate) {
         <div style="text-align: center; margin-top: 20px; font-size: 0.72rem; color: var(--text-tertiary);">
           ${mode === 'login' ? 'New here? Switch to <strong>Sign Up</strong> tab above' : 'Already have an account? Switch to <strong>Login</strong> tab'}
         </div>
+
+        <!-- Demo Credentials -->
+        ${mode === 'login' ? `
+          <div style="margin-top: 32px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: var(--radius-lg);">
+            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em; text-align: center;">Demo Credentials</div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="demo-login-btn" data-email="test@example.com" data-pass="password123" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: var(--radius-md); color: var(--text-secondary); font-size: 0.75rem; text-align: left; cursor: pointer; transition: all 0.2s;">
+                <div style="color: var(--text-primary); font-weight: 600; margin-bottom: 2px;">Test User</div>
+                <div style="font-size: 0.7rem; opacity: 0.7;">test@example.com / password123</div>
+              </button>
+              
+              <button class="demo-login-btn" data-email="admin@cred.club" data-pass="admin123" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: var(--radius-md); color: var(--text-secondary); font-size: 0.75rem; text-align: left; cursor: pointer; transition: all 0.2s;">
+                <div style="color: var(--text-primary); font-weight: 600; margin-bottom: 2px;">Admin User</div>
+                <div style="font-size: 0.7rem; opacity: 0.7;">admin@cred.club / admin123</div>
+              </button>
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
 
@@ -75,6 +94,24 @@ export function renderLogin(app, navigate) {
     screen.querySelector('#tab-signup')?.addEventListener('click', () => { mode = 'signup'; render(); });
 
     screen.querySelector('#submit-btn')?.addEventListener('click', handleSubmit);
+
+    // Demo login listeners
+    screen.querySelectorAll('.demo-login-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const email = btn.getAttribute('data-email');
+        const pass = btn.getAttribute('data-pass');
+        const emailInput = screen.querySelector('#input-email');
+        const passInput = screen.querySelector('#input-password');
+        if (emailInput) emailInput.value = email;
+        if (passInput) passInput.value = pass;
+        
+        // Visual feedback
+        btn.style.borderColor = 'var(--poli-purple)';
+        btn.style.background = 'rgba(110, 89, 255, 0.1)';
+        
+        setTimeout(() => handleSubmit(), 200);
+      });
+    });
 
     // Enter key
     screen.querySelectorAll('input').forEach(input => {
