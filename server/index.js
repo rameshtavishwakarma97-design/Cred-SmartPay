@@ -38,7 +38,8 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    // Allow any railway.app subdomain and localhost
+    if (origin.endsWith('.railway.app') || origin.includes('localhost') || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -48,8 +49,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Serve static files from the 'dist' directory (relative to project root)
-app.use(express.static('dist'));
+const distPath = path.resolve(__dirname, '..', 'dist');
+
+// Serve static files from the 'dist' directory
+app.use(express.static(distPath));
 
 // Initialize DB and seed data
 console.log('📦 Initializing database...');
@@ -201,7 +204,7 @@ app.get('/api/debug-static', (req, res) => {
 app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   
-  const indexPath = path.resolve('dist', 'index.html');
+  const indexPath = path.join(distPath, 'index.html');
   try {
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
@@ -215,7 +218,9 @@ app.use((req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`\n🚀 Smart Pay API running at http://localhost:${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
+  console.log(`   Health: http://localhost:${PORT}/api/health`);
+  console.log(`   Serving static from: ${distPath}`);
+  console.log(`   Index exists: ${fs.existsSync(path.join(distPath, 'index.html'))}\n`);
   
   // Auto-expire pending transactions older than 5 minutes
   setInterval(() => {
